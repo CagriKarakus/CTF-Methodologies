@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Windows persistence/RID hijacking.md",
+                "file": "Windows persistence/Backdooring Existing Services.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "RID hijacking"
+              "title": "Backdooring Existing Services"
             }
           }
         ],
@@ -205,9 +205,15 @@
   },
   "active": "18872c714ff132c9",
   "lastOpenFiles": [
+    "Windows persistence/Windows Local Persistence.md",
+    "Windows persistence/Backdooring Existing Services.md",
+    "Windows persistence/Executable & Shortcut File Hijacking.md",
+    "Windows persistence/Login Screen Backdooring.md",
+    "Windows persistence/Logon Based Persistence.md",
+    "Windows persistence/SCHtask.md",
+    "Windows persistence/Using Windows Services.md",
     "Windows persistence/Security Descriptor.md",
     "Windows persistence/RID hijacking.md",
-    "Windows persistence/Windows Local Persistence.md",
     "Windows persistence",
     "Active Directory.md",
     "linux Privesc basic adımları.md",

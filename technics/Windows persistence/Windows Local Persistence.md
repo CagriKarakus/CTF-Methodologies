@@ -19,3 +19,4 @@ if this look too sus you can add it to "Backup Operators, Remote Management User
 - birden fazla düşük profilli kullanıcı hesabına Administrator ile aynı parolayı verirsin; biri fark edilip kapatılsa bile diğerleri aynı yetkiyle elinde kalır, hepsi aynı hash'le pass-the-hash yapılabilir.
 
 
+https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Windows%20-%20Persistence.md
