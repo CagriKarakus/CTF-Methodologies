@@ -1,4 +1,9 @@
-
+---
+title: "Path Traversal — Karşılaşılan Zorluklar & Bypass"
+date: 2026-09-29
+tags: [web, path-traversal, bypass]
+---
+# Path Traversal — Karşılaşılan Zorluklar & Bypass
 
 #### traversal sequences blocked with absolute path bypass: 
 The application blocks traversal sequences but treats the supplied filename as being relative to a default working directory.
@@ -15,3 +20,7 @@ An application may require the user-supplied filename to start with the expected
 
 An application may require the user-supplied filename to end with an expected file extension, such as `.png`. In this case, it might be possible to use a null byte to effectively terminate the file path before the required extension. For example: `filename=../../../etc/passwd%00.png`.
 
+---
+
+**Up:** [Home](../Home.md)
+**Related:** [File Inclusion - Path Traversal](File%20Inclusion%20-%20Path%20Traversal.md)

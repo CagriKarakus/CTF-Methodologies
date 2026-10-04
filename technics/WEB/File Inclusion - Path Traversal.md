@@ -1,3 +1,8 @@
+---
+title: "File Inclusion & Path Traversal — CTF Cheatsheet"
+date: 2026-09-29
+tags: [web, lfi, rfi, path-traversal, cheatsheet]
+---
 # File Inclusion & Path Traversal — CTF Cheatsheet
 
 ## 1. Temel Kavramlar
@@ -269,3 +274,8 @@ Dosya okunduğu halde içeriği görünmüyorsa PHP filter zincirleriyle sızın
 - `open_basedir` ile PHP'yi kısıtla.
 - `allow_url_include=Off` (RFI'yi öldürür).
 - Hassas dosyaları web kökü dışında tut.
+
+---
+
+**Up:** [Home](../Home.md)
+**Related:** [Path traversal saldırılarında karşılaşılan zorluklar](Path%20traversal%20saldırılarında%20karşılaşılan%20zorluklar.md) · [linux Privesc basic adımları](../linux%20Privesc%20basic%20ad%C4%B1mlar%C4%B1.md)

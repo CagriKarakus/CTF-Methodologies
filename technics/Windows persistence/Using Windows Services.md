@@ -1,3 +1,10 @@
+---
+title: "Using Windows Services"
+date: 2026-10-03
+tags: [windows, persistence, services]
+---
+# Using Windows Services
+
 **Temel mantık**
 
 Windows servisleri kalıcılık için ideal bir mekanizmadır çünkü **makine her başladığında arka planda otomatik çalışacak** şekilde yapılandırılabilirler. Bir servis özünde arka planda çalışan bir executable'dır. Yapılandırırken iki şeyi belirlersin: hangi executable'ın kullanılacağı ve servisin makine açılışında otomatik mi yoksa manuel mi başlayacağı. Eğer bir servisi bizim için bir şey çalıştıracak hale getirebilirsek, kurban makine her yeniden başladığında kontrolü geri kazanırız.
@@ -111,3 +118,8 @@ Sonra tekrar `sc.exe qc THMservice3` ile üç değerin de doğru oturduğunu tey
 - **`exe-service` zorunluluğu:** Her iki yöntemde de reverse shell için normal exe değil, servis protokolünü uygulayan `exe-service` formatı kullanılmalı — yoksa servis başlar başlamaz ölür.
 - **SYSTEM hedefi:** `obj= "LocalSystem"` ile çalışan servis payload'ı SYSTEM bağlamında koşar, bu da hem yetki yükseltme hem de güçlü persistence demektir.
 - **Tespit için bakılacaklar:** Yeni servis oluşturma olayları (Event ID 7045), mevcut servislerin `binPath`/`ServiceStartName` değişiklikleri, alışılmadık konumlardaki (`C:\Windows\rev-svc.exe` gibi) servis binary'leri, ve servis başlangıcıyla tetiklenen beklenmedik ağ bağlantıları. Servis konfigürasyonlarının bütünlüğünü izlemek bu tekniğin temel tespit yoludur.
+
+---
+
+**Up:** [Windows Persistence - Index](Windows%20Persistence%20-%20Index.md)
+**Related:** [Windows Local Persistence](Windows%20Local%20Persistence.md) · [SCHtask](SCHtask.md) · [Backdooring Existing Services](Backdooring%20Existing%20Services.md)

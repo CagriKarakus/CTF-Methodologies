@@ -1,3 +1,9 @@
+---
+title: "Logon Based Persistence"
+date: 2026-10-03
+tags: [windows, persistence, logon, registry]
+---
+# Logon Based Persistence
 
 **Temel mantık**
 
@@ -97,3 +103,8 @@ Böylece hem orijinal işlev korunur hem backdoor çalışır. (Labda `Userinit`
 - **Tespit için bakılacaklar:** Startup klasörlerindeki beklenmedik exe'ler; Run/RunOnce anahtarlarındaki şüpheli kayıtlar (bunlar en çok izlenen autorun konumlarıdır — Autoruns/Sysinternals bunları tarar); Winlogon `Userinit`/`shell` değerlerinde `userinit.exe`/`explorer.exe` dışında eklenmiş komutlar; `HKCU\Environment` altındaki `UserInitMprLogonScript` varlığı (normalde hiç olmaması gereken bir değişken, güçlü IOC). Ayrıca logon'la çakışan beklenmedik ağ bağlantıları.
 
 Özetle bu dört teknik, aynı "logon'da tetikle" fikrinin dört ayrı yuvasıdır: dosya sistemi (Startup), klasik autorun registry'si (Run), logon bileşeni (Winlogon) ve kullanıcı ortam değişkeni (logon script). Çeşitlilik hem yedeklilik (biri temizlense diğeri kalır) hem de kapsam esnekliği (user/makine) sağlar.
+
+---
+
+**Up:** [Windows Persistence - Index](Windows%20Persistence%20-%20Index.md)
+**Related:** [SCHtask](SCHtask.md) · [Backdooring Existing Services](Backdooring%20Existing%20Services.md)

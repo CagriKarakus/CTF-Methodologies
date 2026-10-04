@@ -1,3 +1,10 @@
+---
+title: "Linux Privilege Escalation — Temel Adımlar"
+date: 2026-10-02
+tags: [linux, privesc, cheatsheet]
+---
+# Linux Privilege Escalation — Temel Adımlar
+
 ```
 find / -perm -4000 2>/dev/null    # SUID
 find / -perm -2000 2>/dev/null    # SGID
@@ -29,3 +36,8 @@ ls -la /etc/cron.d/ /etc/cron.daily/ 2>/dev/null
 cat /etc/passwd
 cat /etc/group
 ```
+
+---
+
+**Up:** [Home](Home.md)
+**Related:** [File Inclusion - Path Traversal](WEB/File%20Inclusion%20-%20Path%20Traversal.md) · [Active Directory](Active%20Directory.md)

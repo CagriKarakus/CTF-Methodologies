@@ -1,5 +1,11 @@
+---
+title: "Active Directory — Saldırı Checklist"
+date: 2026-09-28
+tags: [active-directory, methodology, checklist, windows]
+---
+# Active Directory — Saldırı Checklist
 
-### Checlist:
+### Checklist:
 
 Active Directory:
 - [ ] Scan All the ports.
@@ -18,3 +24,8 @@ Active Directory:
 - [ ] Remember to bruteforce different protocols with credentials you have. Remember to use NTLM authentication too
 - [ ] Check UDP ports.
 - [ ] Rescan if youre stuck, verify tools are working properly and you're running them properly
+
+---
+
+**Up:** [Home](Home.md)
+**Related:** [THM-Ra-Writeup](THM-WriteUps/THM-Ra-Writeup.md) · [Windows Local Persistence](Windows%20persistence/Windows%20Local%20Persistence.md) · [linux Privesc basic adımları](linux%20Privesc%20basic%20ad%C4%B1mlar%C4%B1.md)

@@ -1,3 +1,9 @@
+---
+title: "Login Screen Backdooring (Sticky Keys / Utilman)"
+date: 2026-10-03
+tags: [windows, persistence, accessibility, system]
+---
+# Login Screen Backdooring (Sticky Keys / Utilman)
 
 **Temel mantık**
 
@@ -86,3 +92,8 @@ Sahiplik + izin olmadan 3. adım "access denied" verir. Bu `takeown → icacls �
 - **Tespit için bakılacaklar:** `sethc.exe` / `utilman.exe` dosyalarının **boyut/hash anomalisi** (cmd.exe ile birebir aynı hale gelirler — bu çok bariz bir IOC'dir); bu dosyaların beklenmedik sahiplik/izin değişiklikleri; System32'de korumalı dosyalara yapılan `takeown`/`icacls` işlemleri (olay günlüklerinde iz bırakır). Savunma tarafında bu binary'lerin bütünlüğünü (file integrity monitoring) izlemek en etkili yöntemdir. Ayrıca bir karşı önlem olarak, kritik sunucularda accessibility shortcut'larının devre dışı bırakılması önerilir.
 
 Özetle: giriş ekranında SYSTEM yetkisiyle çalışan iki erişilebilirlik binary'si (`sethc.exe`, `utilman.exe`) `cmd.exe` ile değiştirilir; ardından sahiplik/izin ayarlanıp dosya üzerine yazılır. Sonuç — parolasız, SYSTEM yetkili, giriş ekranından tetiklenen kalıcı bir arka kapı.
+
+---
+
+**Up:** [Windows Persistence - Index](Windows%20Persistence%20-%20Index.md)
+**Related:** [Executable & Shortcut File Hijacking](Executable%20%26%20Shortcut%20File%20Hijacking.md) · [Security Descriptor](Security%20Descriptor.md)

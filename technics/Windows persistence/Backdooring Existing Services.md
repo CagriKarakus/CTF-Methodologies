@@ -1,3 +1,9 @@
+---
+title: "Backdooring Existing Services"
+date: 2026-10-03
+tags: [windows, persistence, web-shell, mssql]
+---
+# Backdooring Existing Services
 
 **Temel mantık**
 
@@ -110,3 +116,8 @@ Buradaki mantık: trigger payload'ı dosyada tutmaz, çalışma anında saldırg
     - MSSQL: **`xp_cmdshell`'in etkinleştirilmesi** (büyük bir IOC — üretimde çoğunlukla kapalı olmalı), beklenmedik `IMPERSONATE` grant'leri, şüpheli **trigger** tanımları, ve `sqlservr.exe`'nin PowerShell/cmd spawn etmesi. SQL Server'ın komut satırı çocuk süreçleri doğurması neredeyse her zaman kötü niyetlidir.
 
 Özetle: ikisi de "Windows'un dışındaki bir servisi silah haline getir" yaklaşımıdır. Web shell basit ama gürültülü (dosya bırakır); MSSQL trigger ise veritabanının meşru işleyişine gömülüp diske iz bırakmadan, normal uygulama trafiğiyle tetiklenen çok daha sinsi bir kalıcılık sağlar.
+
+---
+
+**Up:** [Windows Persistence - Index](Windows%20Persistence%20-%20Index.md)
+**Related:** [Logon Based Persistence](Logon%20Based%20Persistence.md) · [Using Windows Services](Using%20Windows%20Services.md) · [Executable & Shortcut File Hijacking](Executable%20%26%20Shortcut%20File%20Hijacking.md)

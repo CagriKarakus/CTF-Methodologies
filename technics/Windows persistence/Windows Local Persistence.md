@@ -1,3 +1,9 @@
+---
+title: "Windows Local Persistence — Genel Bakış"
+date: 2026-10-03
+tags: [windows, persistence, accounts]
+---
+# Windows Local Persistence — Genel Bakış
 
 ### Tampering with Unprivileged Accounts
 
@@ -20,3 +26,8 @@ if this look too sus you can add it to "Backup Operators, Remote Management User
 
 
 https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Windows%20-%20Persistence.md
+
+---
+
+**Up:** [Windows Persistence - Index](Windows%20Persistence%20-%20Index.md)
+**Related:** [Using Windows Services](Using%20Windows%20Services.md) · [Active Directory](../Active%20Directory.md) · [RID hijacking](RID%20hijacking.md)

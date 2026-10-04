@@ -1,3 +1,10 @@
+---
+title: "Scheduled Tasks (schtasks) ile Persistence"
+date: 2026-10-03
+tags: [windows, persistence, scheduled-tasks]
+---
+# Scheduled Tasks (schtasks) ile Persistence
+
 **Temel mantık**
 
 Windows'un yerleşik **Task Scheduler**'ı (görev zamanlayıcı) persistence için güçlü bir araçtır çünkü bir payload'ın **ne zaman çalışacağı üzerinde ince ayar** sağlar: belirli saatlerde, periyodik aralıklarla, hatta belirli sistem olayları (event) tetiklendiğinde çalışacak görevler kurabilirsin. Önceki servis tekniğinden farkı burada: servis genelde "açılışta bir kez" çalışırken, zamanlanmış görev **tekrar tekrar** tetiklenebilir — yani shell'in kopsa bile dakikalar içinde yeniden bağlantı gelir. Komut satırından `schtasks` ile yönetilir.
@@ -93,3 +100,8 @@ Görev gizli ama hâlâ aktif — her dakika tetiklenmeye devam eder.
 - **Diğer izler:** Alışılmadık `/tr` komutları (nc, powershell, bilinmeyen binary'ler), sık tetiklenen görevler ve görev tetiklenmesiyle çakışan beklenmedik ağ bağlantıları.
 
 Özetle: `schtasks` ile SYSTEM yetkili periyodik bir backdoor kurulur, ardından registry'deki SD değeri SYSTEM yetkisiyle silinerek görev tüm kullanıcılardan gizlenir — çalışır ama görünmez bir kalıcılık elde edilir.
+
+---
+
+**Up:** [Windows Persistence - Index](Windows%20Persistence%20-%20Index.md)
+**Related:** [Using Windows Services](Using%20Windows%20Services.md) · [Logon Based Persistence](Logon%20Based%20Persistence.md) · [Security Descriptor](Security%20Descriptor.md)

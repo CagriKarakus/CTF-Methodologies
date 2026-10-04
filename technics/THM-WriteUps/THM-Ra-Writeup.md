@@ -1,3 +1,8 @@
+---
+title: "TryHackMe — \"Ra\" Write-up"
+date: 2026-10-04
+tags: [writeup, tryhackme, active-directory, windows, ntlm]
+---
 # TryHackMe — "Ra" Write-up
 
 > **Oda:** Ra (windcorp.thm)
@@ -158,3 +163,8 @@ Flag'ler, elde edilen erişim seviyelerine göre ilgili kullanıcı dizinlerinde
 ---
 
 *Bu belge öğrenme/metodoloji amaçlıdır; spesifik flag değerleri ve hedefe özel parolalar bilinçli olarak dahil edilmemiştir.*
+
+---
+
+**Up:** [Home](../Home.md)
+**Related:** [Active Directory](../Active%20Directory.md)

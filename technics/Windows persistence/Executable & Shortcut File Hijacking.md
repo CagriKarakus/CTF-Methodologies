@@ -1,3 +1,10 @@
+---
+title: "Executable & Shortcut File Hijacking"
+date: 2026-10-03
+tags: [windows, persistence, hijacking]
+---
+# Executable & Shortcut File Hijacking
+
 **Temel mantık**
 
 Her iki teknik de aynı fikre dayanır: kullanıcının **düzenli olarak çalıştırdığı** bir programı hedef al ve onu, kullanıcı fark etmeden arka planda bir backdoor da tetikleyecek şekilde değiştir. Kullanıcı beklediği programı normal şekilde görür (meşru işlev korunur), ama aynı anda saldırgana bir bağlantı açılır. Kalıcılık (persistence) buradan gelir: kullanıcı o programı her açtığında backdoor yeniden tetiklenir.
@@ -90,3 +97,8 @@ powershell
 - **Yetki bağlamı:** Gelen shell, dosyayı **açan kullanıcının** yetkileriyle gelir. Yani bunu Administrator'ın sık açtığı bir dosya türüne kurarsan, admin yetkili shell alırsın — hedef kullanıcı seçimi bu yüzden önemlidir.
 - **HKLM vs HKCU:** Burada `HKLM\Software\Classes` kullanılıyor, yani değişiklik **makinedeki tüm kullanıcıları** etkiler (admin yetkisi gerektirir). Aynı mantık kullanıcı bazında `HKCU\Software\Classes` altında da kurulabilir — o durumda admin yetkisi gerekmez ama yalnızca o kullanıcıyı etkiler.
 - **Gizlilik:** Dosya meşru şekilde açıldığı ve pencere gizli olduğu için kullanıcı fark etmez. Diğer tekniklerdeki gibi bir an cmd penceresi parlayabilir.
+
+---
+
+**Up:** [Windows Persistence - Index](Windows%20Persistence%20-%20Index.md)
+**Related:** [Backdooring Existing Services](Backdooring%20Existing%20Services.md) · [Login Screen Backdooring](Login%20Screen%20Backdooring.md)
