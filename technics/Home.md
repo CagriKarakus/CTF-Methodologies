@@ -10,6 +10,7 @@ Bu vault'un giriş noktası. Her not buradan en fazla iki adımda erişilebilir.
 ## Metodoloji & Checklist
 - [Active Directory](Active%20Directory.md): AD ağlarında baştan sona saldırı checklist'i (recon → enum → foothold → privesc → lateral).
 - [linux Privesc basic adımları](linux%20Privesc%20basic%20ad%C4%B1mlar%C4%B1.md): Linux'ta shell sonrası temel yetki yükseltme kontrolleri (SUID/SGID, sudo, cron).
+- [Chrome Parola Çıkarma - DPAPI](Chrome%20Parola%20%C3%87%C4%B1karma%20-%20DPAPI.md): Chrome kayıtlı parolalarını DPAPI zinciriyle çözme cheatsheet'i (Local State → master key → AES-GCM; THM/canlı/MS hesabı senaryoları, v20 App-Bound).
 
 ## Web Güvenliği
 - [File Inclusion - Path Traversal](WEB/File%20Inclusion%20-%20Path%20Traversal.md): LFI/RFI ve path traversal için kapsamlı CTF cheatsheet (bypass, PHP wrapper, LFI→RCE).
