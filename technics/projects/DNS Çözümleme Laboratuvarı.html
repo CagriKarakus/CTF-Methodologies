@@ -1,0 +1,1013 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>DNS Çözümleme Laboratuvarı</title>
+<style>
+/* Layout: uygulama kabuğu — yapışkan başlık + sekmeler; ana sekme üstte canlı SVG topoloji/paket simülasyonu, altında adım-senkron ders paneli; 4 derin modül ayrı sekmelerde. */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --surface-2:#f4f6fb; --fg:#161a22; --muted:#5a6475;
+  --border:#dde2ea; --border-strong:#c3cad6;
+  --accent:#0e7490;          /* teal — ana vurgu */
+  --accent-soft:#cff0f6;
+  --q:#2563eb;               /* sorgu (query) mavisi */
+  --q-soft:#dbe6ff;
+  --ok:#15803d;              /* authoritative / başarı */
+  --ok-soft:#d2f0db;
+  --warn:#b45309;            /* referral / uyarı */
+  --warn-soft:#fbead1;
+  --danger:#c1121f;          /* hata / saldırı */
+  --danger-soft:#f9d9db;
+  --shadow:0 1px 2px rgba(20,26,34,.06),0 6px 20px rgba(20,26,34,.06);
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --r:12px; --r-sm:8px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c0f16; --surface:#141a24; --surface-2:#0f141d; --fg:#e7ecf3; --muted:#93a0b4;
+  --border:#232c39; --border-strong:#33404f;
+  --accent:#22d3ee; --accent-soft:#0b3b45;
+  --q:#60a5fa; --q-soft:#152743;
+  --ok:#4ade80; --ok-soft:#113524;
+  --warn:#fbbf24; --warn-soft:#3b2a08;
+  --danger:#f87171; --danger-soft:#3a1215;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c0f16; --surface:#141a24; --surface-2:#0f141d; --fg:#e7ecf3; --muted:#93a0b4;
+  --border:#232c39; --border-strong:#33404f;
+  --accent:#22d3ee; --accent-soft:#0b3b45;
+  --q:#60a5fa; --q-soft:#152743;
+  --ok:#4ade80; --ok-soft:#113524;
+  --warn:#fbbf24; --warn-soft:#3b2a08;
+  --danger:#f87171; --danger-soft:#3a1215;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{text-wrap:balance;line-height:1.2;margin:0}
+p{margin:0}
+code,kbd,.mono{font-family:var(--mono)}
+button{font-family:inherit}
+a{color:var(--accent)}
+
+/* ---------- Header ---------- */
+.app-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.hwrap{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .glyph{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:13px;flex:none}
+.brand h1{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.brand .sub{font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+.spacer{flex:1}
+.theme-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--fg);border-radius:999px;padding:7px 12px;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.theme-btn:hover{border-color:var(--border-strong)}
+
+.tabs{max-width:1180px;margin:0 auto;padding:0 10px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:11px 13px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.tab .n{font-family:var(--mono);font-size:11px;opacity:.7}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
+.view[hidden]{display:none!important}
+
+/* ---------- Controls bar ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px;margin-bottom:16px}
+.addr{display:flex;align-items:center;gap:0;flex:1;min-width:230px;border:1px solid var(--border-strong);border-radius:var(--r-sm);overflow:hidden;background:var(--surface-2)}
+.addr .lead{padding:0 10px;color:var(--muted);font-family:var(--mono);font-size:12px;border-right:1px solid var(--border);align-self:stretch;display:flex;align-items:center}
+.addr input{flex:1;min-width:0;border:none;background:none;color:var(--fg);font-family:var(--mono);font-size:13.5px;padding:10px 10px}
+.addr input:focus{outline:none}
+.btn{border:1px solid var(--border-strong);background:var(--surface-2);color:var(--fg);border-radius:var(--r-sm);padding:9px 14px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.ghost{background:none}
+
+.scenario{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 14px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:var(--surface-2);border-radius:999px;padding:6px 11px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+.chip input{appearance:none;width:30px;height:16px;border-radius:999px;background:var(--border-strong);position:relative;cursor:pointer;flex:none;transition:background .15s}
+.chip input::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .15s}
+.chip input:checked{background:var(--accent)}
+.chip input:checked::after{transform:translateX(14px)}
+.chip:has(input:checked){color:var(--fg);border-color:var(--accent)}
+.chip .lbl b{color:var(--fg);font-weight:600}
+
+/* ---------- Simülasyon alanı ---------- */
+.sim-grid{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+
+.stage-dots{display:flex;gap:6px;padding:12px 14px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.sdot{flex:1;min-width:92px;display:flex;flex-direction:column;gap:4px;padding:7px 9px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid transparent;cursor:pointer}
+.sdot .k{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.sdot .t{font-size:11.5px;font-weight:500;line-height:1.25}
+.sdot[data-state="active"]{border-color:var(--accent);background:var(--accent-soft)}
+.sdot[data-state="done"] .k{color:var(--ok)}
+.sdot[data-state="done"]{opacity:.9}
+
+.stage-box{padding:0}
+.svg-holder{position:relative;width:100%;overflow:hidden;border-radius:0 0 var(--r) var(--r)}
+svg.topology{display:block;width:100%;height:auto}
+
+.node-label{font-family:var(--sans);font-size:11px;font-weight:600}
+.node-sub{font-family:var(--mono);font-size:8.5px}
+
+/* transport/play bar */
+.transport{display:flex;align-items:center;gap:8px;padding:12px 14px;border-top:1px solid var(--border);flex-wrap:wrap}
+.transport .count{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto}
+.iconbtn{width:38px;height:38px;border-radius:9px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--fg);cursor:pointer;display:grid;place-items:center}
+.iconbtn:hover{border-color:var(--accent)}
+.iconbtn:disabled{opacity:.35;cursor:not-allowed}
+.iconbtn.play{background:var(--accent);border-color:var(--accent);color:#fff;width:46px}
+
+/* ---------- Ders paneli ---------- */
+.lesson{padding:0}
+.lesson-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.lesson-head .badge{flex:none;font-family:var(--mono);font-size:11px;font-weight:600;color:#fff;background:var(--accent);padding:4px 8px;border-radius:6px}
+.lesson-head h3{font-size:15px;letter-spacing:-.01em}
+.lesson-head .loc{font-size:11.5px;color:var(--muted);font-family:var(--mono);margin-top:3px}
+.lesson-body{padding:14px 16px;font-size:13.5px;display:flex;flex-direction:column;gap:11px}
+.lesson-body p{color:var(--fg)}
+.lesson-body .hint{color:var(--muted);font-size:12.5px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-family:var(--mono);font-size:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;color:var(--fg);word-break:break-word}
+.tag{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:999px;font-weight:600}
+.tag.q{background:var(--q-soft);color:var(--q)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.danger{background:var(--danger-soft);color:var(--danger)}
+.note{border-left:3px solid var(--accent);background:var(--surface-2);padding:9px 12px;border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:12.5px}
+.note.sec{border-left-color:var(--danger)}
+.note.sec b{color:var(--danger)}
+.note strong{color:var(--accent)}
+
+/* ---------- Generic blocks (modüller) ---------- */
+.view h2.vtitle{font-size:20px;letter-spacing:-.02em;margin-bottom:5px}
+.view .vlead{color:var(--muted);font-size:13.5px;margin-bottom:18px;max-width:70ch}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+.card{padding:16px}
+.card h3{font-size:14.5px;margin-bottom:8px}
+.card p{font-size:13px;color:var(--fg)}
+.term{font-family:var(--mono);font-size:12.5px;background:#0b0e14;color:#d7e2f0;border-radius:var(--r-sm);padding:14px;overflow-x:auto;line-height:1.6;border:1px solid var(--border)}
+:root[data-theme="light"] .term,:root:not([data-theme="dark"]) .term{background:#0b1220;color:#d7e2f0}
+.term .c-q{color:#6ea8ff}.term .c-ok{color:#67e8a0}.term .c-warn{color:#f6c667}.term .c-dim{color:#8695ab}.term .c-danger{color:#ff8a8a}
+
+/* ---------- Paket anatomisi ---------- */
+.packet{display:flex;flex-direction:column;gap:2px;font-family:var(--mono);font-size:11px}
+.pkt-row{display:flex;gap:2px}
+.field{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 6px;text-align:center;cursor:pointer;transition:.12s;min-width:0}
+.field:hover{border-color:var(--accent)}
+.field.sel{background:var(--accent-soft);border-color:var(--accent)}
+.field .fn{font-size:9.5px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.field .fv{font-weight:600;color:var(--fg);font-size:12px}
+.flagline{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.bit{font-family:var(--mono);font-size:11px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;cursor:pointer;background:var(--surface-2);display:flex;gap:6px;align-items:center}
+.bit:hover{border-color:var(--accent)}
+.bit.sel{border-color:var(--accent);background:var(--accent-soft)}
+.bit .v{font-weight:700}
+.bit.on .v{color:var(--ok)}
+.bit.off .v{color:var(--muted)}
+.explain-box{margin-top:14px;padding:13px 15px;border:1px dashed var(--border-strong);border-radius:var(--r-sm);font-size:13px;min-height:84px}
+.explain-box h4{font-family:var(--mono);font-size:12.5px;color:var(--accent);margin-bottom:5px}
+
+/* ---------- Cache & TTL ---------- */
+.cacherow{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);margin-bottom:7px;font-family:var(--mono);font-size:12px}
+.cacherow .dom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cacherow .ttlbar{width:84px;height:7px;border-radius:999px;background:var(--border);overflow:hidden;flex:none}
+.cacherow .ttlbar i{display:block;height:100%;background:var(--ok)}
+.cacherow.neg .ttlbar i{background:var(--danger)}
+.cacherow .ttlnum{width:52px;text-align:right;flex:none}
+.cacherow.expired{opacity:.45}
+.badge-s{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:5px;font-weight:600;flex:none}
+.badge-s.pos{background:var(--ok-soft);color:var(--ok)}
+.badge-s.negb{background:var(--danger-soft);color:var(--danger)}
+.resolve-log{font-family:var(--mono);font-size:12px;border:1px solid var(--border);border-radius:var(--r-sm);padding:11px;background:var(--surface-2);min-height:120px;display:flex;flex-direction:column;gap:4px}
+.resolve-log .ln{display:flex;gap:8px}
+.resolve-log .ln .mk{flex:none}
+.hit{color:var(--ok)}.miss{color:var(--warn)}.out{color:var(--q)}
+
+/* ---------- Güvenlik ---------- */
+.race{position:relative;height:150px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);overflow:hidden;margin:12px 0}
+.racer{position:absolute;left:8px;height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:999px;font-family:var(--mono);font-size:11px;font-weight:600;transition:left .05s linear;white-space:nowrap}
+.racer.legit{top:20px;background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok)}
+.racer.attack{top:92px;background:var(--danger-soft);color:var(--danger);border:1px solid var(--danger)}
+.finish{position:absolute;right:12px;top:0;bottom:0;width:2px;background:repeating-linear-gradient(var(--fg) 0 6px,transparent 6px 12px);opacity:.4}
+.finish span{position:absolute;top:4px;right:6px;font-size:10px;font-family:var(--mono);color:var(--muted);white-space:nowrap}
+.guess{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.guess .g{border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;text-align:center;font-family:var(--mono)}
+.guess .g .lab{font-size:10.5px;color:var(--muted)}
+.guess .g .big{font-size:18px;font-weight:700}
+.verdict{padding:11px 13px;border-radius:var(--r-sm);font-size:13px;font-weight:500;text-align:center}
+.verdict.win{background:var(--danger-soft);color:var(--danger)}
+.verdict.lose{background:var(--ok-soft);color:var(--ok)}
+
+.secgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.secgrid{grid-template-columns:1fr}}
+.seccard .sechead{display:flex;gap:7px;align-items:center;margin-bottom:9px;flex-wrap:wrap}
+.stage-chip{font-family:var(--mono);font-size:10.5px;font-weight:600;background:var(--accent-soft);color:var(--accent);padding:2px 7px;border-radius:5px}
+.atk-lbl{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.03em}
+.atk-lbl.atk{background:var(--danger-soft);color:var(--danger)}
+.atk-lbl.def{background:var(--ok-soft);color:var(--ok)}
+.seccard h4{font-size:14px;margin:0 0 6px}
+.seccard>p{font-size:12.5px;color:var(--fg);margin-bottom:9px;line-height:1.5}
+.seccard .ex{font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:7px 9px;margin-bottom:9px;overflow-x:auto;color:var(--muted);white-space:nowrap}
+.seccard .def{font-size:12px;border-left:3px solid var(--ok);padding-left:9px;color:var(--muted);line-height:1.5}
+.seccard .def b{color:var(--ok)}
+
+.ladder{display:flex;flex-direction:column;gap:0}
+.rung{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.rung:last-child{border-bottom:none}
+.rung .step-n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--danger-soft);color:var(--danger);font-family:var(--mono);font-weight:700;font-size:12px;display:grid;place-items:center}
+.rung .rc h4{font-size:13.5px;margin-bottom:3px}
+.rung .rc p{font-size:12.5px;color:var(--muted)}
+.rung .rc .proto{font-family:var(--mono);font-size:11px;color:var(--warn)}
+
+/* ---------- dig +trace ---------- */
+.trace{font-family:var(--mono);font-size:12px;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden}
+.trace .tl{display:block;padding:4px 12px;border:none;background:none;color:var(--fg);text-align:left;width:100%;cursor:pointer;border-left:3px solid transparent;white-space:pre-wrap;word-break:break-word}
+.trace .tl:hover{background:var(--surface-2)}
+.trace .tl.active{background:var(--accent-soft);border-left-color:var(--accent)}
+.trace .tl.recv{color:var(--muted)}
+.trace .tl.ans{color:var(--ok)}
+.trace .tl.dnssec{color:var(--warn)}
+.trace .tl.fail{color:var(--danger);opacity:.85}
+.trace-explain{margin-top:12px;padding:13px 15px;border:1px dashed var(--border-strong);border-radius:var(--r-sm);font-size:13px;min-height:70px}
+.trace-explain h4{font-family:var(--mono);font-size:12px;color:var(--accent);margin-bottom:4px}
+
+.foot{max-width:1180px;margin:40px auto 0;padding:18px 16px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<header class="app-header">
+  <div class="hwrap">
+    <div class="brand">
+      <div class="glyph">DNS</div>
+      <div>
+        <h1>DNS Çözümleme Laboratuvarı</h1>
+        <div class="sub">5 aşamalı ad çözümleme · interaktif</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button class="theme-btn" id="themeBtn" aria-label="Tema değiştir"><span id="themeIcon">◐</span><span id="themeLbl">Tema</span></button>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Bölümler">
+    <button class="tab" role="tab" aria-selected="true" data-tab="sim"><span class="n">00</span>Simülasyon + Ders</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="packet"><span class="n">01</span>Paket Anatomisi</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="cache"><span class="n">02</span>Cache & TTL</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="sec"><span class="n">03</span>Güvenlik</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="trace"><span class="n">04</span>dig +trace</button>
+  </nav>
+</header>
+
+<main class="wrap">
+
+<!-- ================= SIM ================= -->
+<section class="view" id="view-sim" role="tabpanel">
+  <div class="panel controls">
+    <label class="addr">
+      <span class="lead">https://</span>
+      <input id="domainInput" value="example.example.com" spellcheck="false" aria-label="Çözümlenecek alan adı">
+    </label>
+    <button class="btn primary" id="buildBtn">↻ Senaryoyu kur</button>
+  </div>
+  <div class="panel" style="margin-bottom:16px">
+    <div class="scenario" id="scenario">
+      <label class="chip"><input type="checkbox" id="sc-cache"><span class="lbl">Resolver cache'inde <b>var</b></span></label>
+      <label class="chip"><input type="checkbox" id="sc-fwd"><span class="lbl">Forwarder <b>kullan</b></span></label>
+      <label class="chip"><input type="checkbox" id="sc-qmin" checked><span class="lbl">QNAME <b>minimization</b></span></label>
+      <label class="chip"><input type="checkbox" id="sc-nx"><span class="lbl">Sonuç: <b>NXDOMAIN</b></span></label>
+      <label class="chip"><input type="checkbox" id="sc-llmnr"><span class="lbl">Tek kelime → <b>LLMNR/Responder</b></span></label>
+    </div>
+  </div>
+
+  <div class="sim-grid">
+    <!-- SOL: topoloji -->
+    <div class="panel stage-box">
+      <div class="stage-dots" id="stageDots"></div>
+      <div class="svg-holder" id="svgHolder"></div>
+      <div class="transport">
+        <button class="iconbtn" id="prevBtn" aria-label="Önceki adım" disabled>◀</button>
+        <button class="iconbtn play" id="playBtn" aria-label="Oynat/Duraklat">▶</button>
+        <button class="iconbtn" id="nextBtn" aria-label="Sonraki adım">▶▌</button>
+        <button class="btn ghost" id="restartBtn" style="padding:8px 12px">⟲ Baştan</button>
+        <span class="count" id="stepCount">adım 0 / 0</span>
+      </div>
+    </div>
+    <!-- SAĞ: ders -->
+    <div class="panel lesson" id="lesson">
+      <div class="lesson-head">
+        <span class="badge" id="lBadge">—</span>
+        <div>
+          <h3 id="lTitle">Başlamak için "Senaryoyu kur"</h3>
+          <div class="loc" id="lLoc"></div>
+        </div>
+      </div>
+      <div class="lesson-body" id="lBody">
+        <p class="hint">Yukarıdan bir alan adı yaz ve senaryoyu kur. Sonra ▶ ile paketi adım adım izle; her adımda burada o adımın ayrıntılı anlatımı ve paket alanları görünecek.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PACKET ================= -->
+<section class="view" id="view-packet" role="tabpanel" hidden>
+  <h2 class="vtitle">Paket Anatomisi</h2>
+  <p class="vlead">Bir DNS mesajı tek bir IP'den ibaret değildir. Header, flag'ler ve dört bölümden oluşur. Herhangi bir alana veya bite tıkla; ne işe yaradığını aşağıda açıklar.</p>
+  <div class="grid2">
+    <div class="panel card">
+      <h3>DNS Header (12 byte) + bölümler</h3>
+      <div class="packet" id="pktFields"></div>
+      <div style="margin-top:12px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:5px">FLAGS (2 byte)</div>
+        <div class="flagline" id="pktFlags"></div>
+      </div>
+    </div>
+    <div class="panel card">
+      <div class="explain-box" id="pktExplain">
+        <h4>Bir alan seç</h4>
+        <p style="color:var(--muted)">Soldaki header alanlarına ya da flag bitlerine tıklayarak başla. Örneğin <b>RD</b> (Recursion Desired) ve <b>AA</b> (Authoritative Answer) bitleri, bir cevabın nereden geldiğini anlamanın anahtarıdır.</p>
+      </div>
+      <div style="margin-top:14px" class="kv" id="pktRcode">
+        <dt>RCODE 0</dt><dd>NOERROR — başarılı</dd>
+        <dt>RCODE 2</dt><dd>SERVFAIL — çözülemedi (DNSSEC/upstream)</dd>
+        <dt>RCODE 3</dt><dd>NXDOMAIN — isim yok</dd>
+        <dt>RCODE 5</dt><dd>REFUSED — reddedildi (yetki/recursion)</dd>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CACHE ================= -->
+<section class="view" id="view-cache" role="tabpanel" hidden>
+  <h2 class="vtitle">Cache & TTL</h2>
+  <p class="vlead">Her kayıt TTL (Time To Live) süresi kadar cache'te tutulur. Aynı ismi tekrar sorarsan yol kısalır. "Yok" cevapları da (negatif cache) saklanır. Aşağıda canlı olarak dene.</p>
+  <div class="grid2">
+    <div class="panel card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0">Resolver cache'i</h3>
+        <button class="btn ghost" id="cacheClear" style="padding:6px 10px;font-size:12px">Temizle</button>
+      </div>
+      <div id="cacheList"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <input id="cacheDomain" class="mono" value="shop.example.com" spellcheck="false" style="flex:1;min-width:140px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--fg);border-radius:var(--r-sm);padding:9px 10px;font-size:12.5px">
+        <button class="btn primary" id="cacheQuery">Sorgula</button>
+      </div>
+      <p class="hint" style="font-size:12px;color:var(--muted);margin-top:8px">TTL çubukları gerçek zamanlı azalır. Süre dolunca kayıt soluklaşır ve bir sonraki sorgu yeniden dışarı çıkar.</p>
+    </div>
+    <div class="panel card">
+      <h3>Çözümleme günlüğü</h3>
+      <div class="resolve-log" id="resolveLog"><div class="ln"><span class="mk out">·</span><span>Bir isim sorgula, cache hit/miss burada görünür.</span></div></div>
+      <div class="kv" style="margin-top:12px">
+        <dt>Pozitif cache</dt><dd>Kaydın kendi TTL'i kadar</dd>
+        <dt>Negatif cache</dt><dd>SOA <code>minimum</code> alanı kadar (NXDOMAIN)</dd>
+        <dt>TTL yuvarlaksa</dt><dd>taze (authoritative'den)</dd>
+        <dt>TTL kırıksa</dt><dd>cache'ten (kalan süre)</dd>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECURITY ================= -->
+<section class="view" id="view-sec" role="tabpanel" hidden>
+  <h2 class="vtitle">Güvenlik: Poisoning & Responder</h2>
+  <p class="vlead">DNS'in iki klasik zayıf noktası: resolver'ın UDP cevabını taklit eden cache poisoning, ve DNS başarısız olunca devreye giren LLMNR/NBT-NS'i istismar eden Responder. İkisini de canlandır.</p>
+
+  <div class="panel card" style="margin-bottom:16px">
+    <h3>1 · Cache Poisoning Yarışı</h3>
+    <p style="color:var(--muted);font-size:12.5px;margin-bottom:4px">Saldırganın sahte cevabı, gerçek cevaptan <b>önce</b> ulaşmalı ve Transaction ID + kaynak portu aynı anda tutturmalı. "Source port randomization" bunu neden imkânsıza yaklaştırır, gör.</p>
+    <label class="chip" style="margin:8px 0"><input type="checkbox" id="portRand" checked><span class="lbl">Source port randomization <b>açık</b> (RFC 5452)</span></label>
+    <div class="race" id="race">
+      <div class="racer legit" id="racerLegit" style="left:8px">✓ gerçek cevap</div>
+      <div class="racer attack" id="racerAttack" style="left:8px">✗ sahte cevap (saldırgan)</div>
+      <div class="finish"><span>resolver</span></div>
+    </div>
+    <div class="guess">
+      <div class="g"><div class="lab">tahmin edilecek uzay</div><div class="big" id="guessSpace">~4.3 milyar</div></div>
+      <div class="g"><div class="lab">tek denemede isabet şansı</div><div class="big" id="guessOdds">1 / 4.3B</div></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn primary" id="raceRun">Yarışı başlat</button>
+      <span class="verdict" id="raceVerdict" style="flex:1;min-width:160px">Hazır.</span>
+    </div>
+  </div>
+
+  <div class="panel card">
+    <h3>2 · LLMNR/NBT-NS Poisoning (Responder)</h3>
+    <p style="color:var(--muted);font-size:12.5px;margin-bottom:10px">DNS "yok" dediğinde Windows yerel ağa bağırır — ve kimlik doğrulaması yoktur. İlk cevap veren kazanır. Saldırganın NTLMv2 hash'i yakalama akışı:</p>
+    <div class="ladder" id="responderLadder"></div>
+    <div class="note sec" style="margin-top:14px"><b>Etik:</b> Bu akış yalnızca sahip olunan izole bir lab veya yazılı izinli sızma testi içindir. Rastgele bir ağda Responder çalıştırmak kimlik bilgisi toplamaktır ve suçtur.</div>
+  </div>
+
+  <h3 style="font-size:16px;margin:24px 0 4px;letter-spacing:-.01em">3 · Aşamalara göre tüm saldırı yüzeyi</h3>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px;max-width:70ch">DNS boyunca her aşamada değinilen saldırı ve savunmaların tamamı. Her kart hangi aşamada (A1–A5) geçtiğini ve <span class="atk-lbl atk" style="display:inline">SALDIRI</span> mı <span class="atk-lbl def" style="display:inline">SAVUNMA</span> mı olduğunu gösterir.</p>
+  <div class="secgrid" id="secTopics"></div>
+</section>
+
+<!-- ================= TRACE ================= -->
+<section class="view" id="view-trace" role="tabpanel" hidden>
+  <h2 class="vtitle">dig +trace Okuyucu</h2>
+  <p class="vlead"><code>dig +trace</code>, resolver'ın yerine geçip iteratif adımları tek tek gösterir. Aşağıda gerçek bir çıktı (DNSSEC açık, example.com → Cloudflare). Her satıra tıkla; ne anlattığını açıklar. Anahtar: her bloğun sonundaki <code>Received from</code> satırı, bilgiyi kimin verdiğini söyler.</p>
+  <div class="grid2" style="grid-template-columns:1.3fr 1fr">
+    <div class="panel card">
+      <div class="trace" id="traceBox"></div>
+    </div>
+    <div class="panel card">
+      <div class="trace-explain" id="traceExplain">
+        <h4>Bir satır seç</h4>
+        <p style="color:var(--muted)">Soldaki çıktıda herhangi bir satıra tıkla. Referral'lar (NS kayıtları), glue kayıtları ve nihai A kaydının her biri ayrı ayrı açıklanacak.</p>
+      </div>
+      <div class="kv" style="margin-top:14px">
+        <dt>NS</dt><dd>Bu zone'dan kim sorumlu (delegasyon)</dd>
+        <dt>A</dt><dd>İsmin IPv4 adresi (nihai cevap)</dd>
+        <dt>DS / RRSIG</dt><dd>DNSSEC güven zinciri ve imzalar</dd>
+        <dt>Received from</dt><dd>bu bloğu cevaplayan sunucu</dd>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-family:var(--mono);font-size:11px">
+        <span style="color:var(--muted)">■ NS</span>
+        <span style="color:var(--warn)">■ DNSSEC</span>
+        <span style="color:var(--ok)">■ A kaydı</span>
+        <span style="color:var(--danger)">■ IPv6 hatası</span>
+        <span style="color:var(--muted)">■ Received from</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="foot">
+  DNS Çözümleme Laboratuvarı · stub resolver → recursive resolver → root/TLD/authoritative → cache → LLMNR/NBT-NS fallback. Eğitim amaçlıdır; saldırı teknikleri yalnızca izole lab ortamında.
+</footer>
+
+<script>
+"use strict";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+
+/* ---------------- Tema ---------------- */
+(function(){
+  let t=null; try{t=localStorage.getItem('dnslab-theme')}catch(e){}
+  if(t)document.documentElement.setAttribute('data-theme',t);
+  function sync(){
+    const cur=document.documentElement.getAttribute('data-theme');
+    const dark = cur? cur==='dark' : matchMedia('(prefers-color-scheme:dark)').matches;
+    $('#themeIcon').textContent=dark?'☾':'☀';
+    $('#themeLbl').textContent=dark?'Koyu':'Açık';
+  }
+  $('#themeBtn').addEventListener('click',()=>{
+    const cur=document.documentElement.getAttribute('data-theme');
+    const dark = cur? cur==='dark' : matchMedia('(prefers-color-scheme:dark)').matches;
+    const next=dark?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    try{localStorage.setItem('dnslab-theme',next)}catch(e){}
+    sync();
+  });
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',sync);
+  sync();
+})();
+
+/* ---------------- Sekmeler ---------------- */
+$$('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    $$('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
+    tab.setAttribute('aria-selected','true');
+    $$('.view').forEach(v=>v.hidden=true);
+    $('#view-'+tab.dataset.tab).hidden=false;
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+/* =====================================================================
+   ANA SİMÜLASYON
+   ===================================================================== */
+const NODES={
+  browser:{x:70,y:60,label:'Tarayıcı',sub:'cache'},
+  os:{x:70,y:150,label:'İşletim Sistemi',sub:'stub resolver + hosts'},
+  resolver:{x:270,y:150,label:'Recursive Resolver',sub:'DC / modem / 8.8.8.8'},
+  root:{x:470,y:55,label:'Root',sub:'. (13 anycast)'},
+  tld:{x:470,y:150,label:'TLD',sub:'.com'},
+  auth:{x:470,y:245,label:'Authoritative',sub:'example.com NS'},
+  fwd:{x:270,y:55,label:'Forwarder',sub:'ISS / 8.8.8.8'},
+  lan:{x:270,y:250,label:'Yerel Ağ (LAN)',sub:'multicast/broadcast'},
+};
+const EDGES=[
+  ['browser','os'],['os','resolver'],['resolver','root'],['resolver','tld'],
+  ['resolver','auth'],['resolver','fwd'],['os','lan']
+];
+const STAGE_NAMES=['Kendi Makine','Recursive Resolver','İteratif Yolculuk','Dönüş & Cache','Fallback'];
+
+let steps=[], idx=-1, playing=false, playTimer=null, domain='example.example.com';
+
+function qlabel(n){return `<span class="tag q">SORU</span> ${n} · A · IN`;}
+
+function buildSteps(){
+  domain=($('#domainInput').value||'example.example.com').trim().toLowerCase();
+  const cache=$('#sc-cache').checked, fwd=$('#sc-fwd').checked,
+        qmin=$('#sc-qmin').checked, llmnr=$('#sc-llmnr').checked;
+  const parts=domain.split('.');
+  const tld=parts.length>1?parts[parts.length-1]:'com';
+  const reg=parts.length>1?parts.slice(-2).join('.'):domain;
+  const single = parts.length===1;
+  const llmnrActive = single && llmnr;
+  // LLMNR senaryosunda DNS zaten başarısız olur (fallback bu yüzden tetiklenir), o yüzden NXDOMAIN'i zorla
+  const nx = $('#sc-nx').checked || llmnrActive;
+  const S=[];
+  const push=(o)=>S.push(o);
+
+  // ---- AŞAMA 1 ----
+  push({stage:0,loc:'Tarayıcı',title:'Adres ayrıştırılır',nodes:['browser'],edge:null,
+    body:[`<p>Kullanıcı <code>${domain}</code> yazdı. Tarayıcı önce bunun bir URL mi arama mı olduğuna karar verir, sonra <b>host</b> kısmını ayıklar. Şema, port ve path DNS'i ilgilendirmez.</p>`,
+      `<div class="note">Host zaten bir IP olsaydı (ör. <code>192.168.1.10</code>) DNS sorgusu hiç yapılmazdı. <code>localhost</code> da DNS'e gitmeden çözülür.</div>`]});
+  push({stage:0,loc:'Tarayıcı cache',title:'Tarayıcı cache kontrol',nodes:['browser'],edge:null,
+    body:[`<p>Tarayıcı kendi DNS cache'ine bakar. ${cache?'Bu örnekte tarayıcıda yok, OS\'ye iniyoruz.':'Boş — devam.'} Chrome'da <code>chrome://net-internals/#dns</code> ile görülür.</p>`,
+      `<div class="note"><strong>DoH açık olsaydı</strong> tarayıcı OS'yi atlayıp HTTPS üzerinden doğrudan bir DoH sunucusuna sorardı; kurumsal DNS bu sorguyu hiç görmezdi.</div>`]});
+  push({stage:0,loc:'getaddrinfo()',title:'İşletim sistemine geçiş',nodes:['browser','os'],edge:['browser','os'],dir:1,
+    body:[`<p>Tarayıcı OS'nin ortak fonksiyonunu çağırır: <code>getaddrinfo("${domain}")</code>. Bu kapıyı <code>ping</code>, <code>curl</code>, SSH — hepsi kullanır.</p>`,
+      `<p>Genelde <b>hem A (IPv4) hem AAAA (IPv6)</b> istenir; bu yüzden tek girişte iki sorgu görürsün. <b>Happy Eyeballs</b> ile ikisi paralel denenir.</p>`]});
+  push({stage:0,loc:'OS · cache + hosts',title:'OS cache ve hosts dosyası',nodes:['os'],edge:null,
+    body:[`<p>Stub resolver sırayla bakar: kendi hostname'i → OS DNS cache'i → <code>hosts</code> dosyası. Windows'ta hosts kayıtları cache'e önceden yüklenir; Linux'ta sırayı <code>/etc/nsswitch.conf</code> (<code>hosts: files dns</code>) belirler.</p>`,
+      `<div class="note"><strong>Tuzak:</strong> <code>dig</code>/<code>nslookup</code> bu zinciri <b>atlar</b> — hosts'a ve OS cache'ine bakmaz. Gerçek sonucu <code>getent hosts</code> (Linux) / <code>Resolve-DnsName</code> (Windows) gösterir.</p>`]});
+  if(single){
+    push({stage:0,loc:'İsim tamamlama',title:'Tek kelime → suffix eklenir',nodes:['os'],edge:null,
+      body:[`<p><code>${domain}</code> tek kelimelik. Sistem DNS suffix ekler: <code>${domain}.corp.local</code> gibi. Linux'ta <code>search</code> + <code>ndots</code> bunu yönetir.</p>`,
+        `<div class="note">Kubernetes'te <code>ndots:5</code> yüzünden önce birkaç gereksiz <code>...svc.cluster.local</code> sorgusu gider — klasik performans sorunu.</div>`]});
+  } else {
+    push({stage:0,loc:'İsim tamamlama',title:'FQDN / suffix kontrolü',nodes:['os'],edge:null,
+      body:[`<p><code>${domain}</code> birden çok etikete sahip; nokta yeterli olduğundan olduğu gibi sorgulanır. Sonuna nokta konmuş olsaydı (<code>${domain}.</code>) bu bir <b>FQDN</b> olur, hiçbir sonek eklenmezdi.</p>`,
+        `<div class="note">Her ismin sonunda görünmeyen bir nokta vardır ve <b>root</b>'u temsil eder.</div>`]});
+  }
+  push({stage:0,loc:'OS → Resolver',title:'İlk paket dışarı çıkar',nodes:['os','resolver'],edge:['os','resolver'],dir:1,ptype:'q',
+    body:[`<p>Yerelde bulunamadı. Stub resolver <code>resolv.conf</code>'taki sunucuya bir sorgu paketi yollar.</p>`,
+      `<dl class="kv"><dt>Hedef</dt><dd>${fwd?'8.8.8.8':'192.168.1.1 / DC'} :53 (UDP)</dd><dt>Transaction ID</dt><dd>0x${rid()}</dd><dt>Kaynak port</dt><dd>${randPort()} (rastgele)</dd><dt>RD biti</dt><dd>1 — "benim için recursive çöz"</dd><dt>Soru</dt><dd>${domain} A IN</dd></dl>`,
+      `<div class="note"><strong>RD=1</strong> bu sorguyu <b>recursive</b> yapar. Kaynak portun rastgeleliği, ileride göreceğimiz cache poisoning'i zorlaştırmak içindir.</div>`]});
+
+  // ---- AŞAMA 2 ----
+  push({stage:1,loc:'Resolver · Adım A',title:'Erişim kontrolü',nodes:['resolver'],edge:null,
+    body:[`<p>Resolver önce "bu istemciye hizmet veriyor muyum?" diye bakar. Değilse <span class="tag danger">REFUSED</span> döner.</p>`,
+      `<dl class="kv"><dt>NXDOMAIN</dt><dd>isim gerçekten yok</dd><dt>REFUSED</dt><dd>sorgu hiç işlenmedi (yetki/recursion/upstream)</dd><dt>SERVFAIL</dt><dd>işlendi ama patladı (DNSSEC/upstream)</dd></dl>`,
+      `<div class="note sec">Herkese açık bir resolver (<b>open resolver</b>) DNS amplification DDoS'ta kullanılır. Bu kontrol onu engeller.</div>`]});
+  push({stage:1,loc:'Resolver · Adım B',title:'Ben bu zone\'un sahibi miyim?',nodes:['resolver'],edge:null,
+    body:[`<p>Sorulan isim resolver'ın barındırdığı bir <b>zone</b>'a mı ait? (Örn. AD DC'nin <code>corp.local</code>'ı.) Öyleyse cevap doğrudan kendi verisinden gelir, dışarı çıkılmaz.</p>`,
+      `<p><code>${domain}</code> dış bir isim → sahibi değil. Bu yüzden cevap authoritative olmayacak (<span class="tag">aa=0</span>).</p>`]});
+  if(cache){
+    push({stage:1,loc:'Resolver · Adım C',title:'Cache HIT',nodes:['resolver'],edge:null,ptype:'ok',
+      body:[`<p>Daha önce biri <code>${domain}</code>'u sormuş ve TTL dolmamış. Resolver cevabı <b>cache'ten</b> döner — root/TLD/authoritative adımları tamamen atlanır.</p>`,
+        `<div class="note">Bu cevap <b>non-authoritative</b>'dir (<span class="tag">aa=0</span>, <span class="tag q">ra=1</span>). Aşama 3'ü bu senaryoda hiç görmeyiz — cache'in gücü budur.</div>`]});
+  } else {
+    push({stage:1,loc:'Resolver · Adım C',title:'Cache MISS',nodes:['resolver'],edge:null,
+      body:[`<p>Cache'te yok (veya TTL dolmuş). Resolver cevabı gidip bulmak zorunda. İki yol var.</p>`,
+        `<dl class="kv"><dt>Pozitif cache</dt><dd>kaydın TTL'i kadar</dd><dt>Negatif cache</dt><dd>SOA minimum kadar (NXDOMAIN)</dd></dl>`]});
+    if(fwd){
+      push({stage:1,loc:'Resolver → Forwarder',title:'Yol 1: Forwarder\'a ilet',nodes:['resolver','fwd'],edge:['resolver','fwd'],dir:1,ptype:'q',
+        body:[`<p>Resolver internette tek tek dolaşmaz; sorguyu başka bir recursive resolver'a (<b>forwarder</b>, ör. 8.8.8.8) <b>recursive</b> olarak devreder. Forwarder tüm işi yapıp cevabı getirir.</p>`,
+          `<div class="note"><strong>Conditional forwarder:</strong> "şu domain için şu sunucuya, gerisi için normale" — iki AD ormanının birbirini görmesinin klasik yolu.</div>`]});
+      push({stage:1,loc:'Forwarder',title:'Forwarder iteratif çözer',nodes:['fwd','root','tld','auth'],edge:null,
+        body:[`<p>Asıl root→TLD→authoritative yolculuğunu artık <b>forwarder</b> yapıyor (Aşama 3'teki adımlar onun içinde geçer). Senin resolver'ın sadece bekliyor.</p>`]});
+    }
+  }
+
+  // ---- AŞAMA 3 (yalnızca cache yoksa ve forwarder yoksa) ----
+  if(!cache && !fwd){
+    const askRoot = qmin? `${tld} NS?` : `${domain} A?`;
+    const askTld  = qmin? `${reg} NS?` : `${domain} A?`;
+    push({stage:1,loc:'Resolver · Adım D',title:'Yol 2: Kendisi çözer (root hints)',nodes:['resolver'],edge:null,
+      body:[`<p>Forwarder yok → resolver işi kendisi yapar. Başlangıç noktası, 13 root sunucunun gömülü listesi: <b>root hints</b> (<code>named.root</code>).</p>`,
+        `<div class="note">${qmin?'<strong>QNAME minimization açık:</strong> her sunucuya sadece o katmanın bilmesi gerekeni soracak.':'<strong>QNAME minimization kapalı:</strong> her sunucuya tam isim sorulacak (klasik davranış).'}</div>`]});
+    push({stage:2,loc:'Resolver → Root',title:'Root\'a sor',nodes:['resolver','root'],edge:['resolver','root'],dir:1,ptype:'q',
+      body:[`<p><b>İteratif</b> sorgu (RD yok sayılır). Soru: <code>${askRoot}</code></p>`,
+        `<div class="note warn-note">Root IP'yi vermez; bir <b>referral</b> döner: "bilmiyorum, ama <code>.${tld}</code> için şu NS'lere git" + glue IP'leri. <span class="tag warn">AUTHORITY: NS</span></div>`]});
+    push({stage:2,loc:'Root → Resolver',title:'Root referral',nodes:['root','resolver'],edge:['resolver','root'],dir:-1,ptype:'warn',
+      body:[`<dl class="kv"><dt>ANSWER</dt><dd>— (boş)</dd><dt>AUTHORITY</dt><dd>${tld}. NS a.gtld-servers.net …</dd><dt>ADDITIONAL</dt><dd>glue: a.gtld-servers.net = 192.5.6.30</dd><dt>aa biti</dt><dd>0 (root, .${tld}'nin sahibi değil)</dd></dl>`,
+        `<div class="note">Glue record, "NS ismini çözmek için yine onu çözmen gerekir" döngüsünü kırar.</div>`]});
+    push({stage:2,loc:'Resolver → TLD',title:`.${tld} sunucusuna sor`,nodes:['resolver','tld'],edge:['resolver','tld'],dir:1,ptype:'q',
+      body:[`<p>Soru: <code>${askTld}</code>. TLD sunucusu milyonlarca domainin IP'sini tutmaz; sadece "her domain için yetkili NS kim" bilgisini tutar (registrar'da girilen NS kayıtları).</p>`]});
+    push({stage:2,loc:'TLD → Resolver',title:'TLD referral',nodes:['tld','resolver'],edge:['resolver','tld'],dir:-1,ptype:'warn',
+      body:[`<dl class="kv"><dt>AUTHORITY</dt><dd>${reg}. NS ns1.${reg} …</dd><dt>ADDITIONAL</dt><dd>glue: ns1.${reg} = 199.43.x.x</dd></dl>`,
+        `<div class="note">Bu NS bilgisine bakarak domainin hangi DNS sağlayıcısını (Cloudflare, Route53…) kullandığını anlarsın — OSINT için değerli.</div>`]});
+    push({stage:2,loc:'Resolver → Authoritative',title:'Authoritative sunucuya sor',nodes:['resolver','auth'],edge:['resolver','auth'],dir:1,ptype:'q',
+      body:[`<p>Soru: <code>${domain} A?</code> Bu sunucu <code>${reg}</code> zone'unun <b>sahibi</b>.</p>`]});
+    if(nx){
+      push({stage:2,loc:'Authoritative → Resolver',title:'NXDOMAIN',nodes:['auth','resolver'],edge:['resolver','auth'],dir:-1,ptype:'danger',
+        body:[`<dl class="kv"><dt>RCODE</dt><dd>NXDOMAIN (3)</dd><dt>ANSWER</dt><dd>—</dd><dt>AUTHORITY</dt><dd>SOA ${reg} (negatif cache süresi)</dd><dt>aa biti</dt><dd>1 (yetkili "yok" cevabı)</dd></dl>`,
+          `<div class="note sec"><b>Negatif cache:</b> bu "yok" cevabı SOA <code>minimum</code> süresi kadar saklanır. Kaydı yeni oluşturup "neden çıkmıyor?" dediğin an budur.</div>`]});
+    } else {
+      push({stage:2,loc:'Authoritative → Resolver',title:'Nihai cevap (AA=1)',nodes:['auth','resolver'],edge:['resolver','auth'],dir:-1,ptype:'ok',
+        body:[`<dl class="kv"><dt>RCODE</dt><dd>NOERROR</dd><dt>ANSWER</dt><dd>${domain} ${ttl()} IN A 93.184.${rand(10,250)}.${rand(10,250)}</dd><dt>aa biti</dt><dd>1 — authoritative</dd></dl>`,
+          `<div class="note">Zincirin sonu. Resolver yol boyunca öğrendiği <b>her şeyi</b> (A + .${tld} NS + ${reg} NS) kendi TTL'leri kadar cache'ler.</div>`]});
+    }
+  }
+
+  // ---- AŞAMA 4 (LLMNR fallback senaryosu değilse dönüş yine var) ----
+  const failedOut = nx; // isim NXDOMAIN
+  if(!llmnrActive){
+    push({stage:3,loc:'Resolver → OS',title:'Cevap geri döner (1/2)',nodes:['resolver','os'],edge:['os','resolver'],dir:-1,ptype:failedOut?'danger':'ok',
+      body:[`<p>Resolver cevabı kendi cache'ine yazar ve istemciye döner. Pakette <span class="tag">aa=0</span> (sahibi değil) ama <span class="tag q">ra=1</span> (recursion sağladı).</p>`,
+        failedOut?`<div class="note sec">Bu bir NXDOMAIN; OS de bunu <b>negatif</b> olarak cache'ler.</div>`:`<div class="note">Aynı kayıt artık resolver + OS + tarayıcı — üç yerde, her birinin kendi TTL geri sayımıyla.</div>`]});
+    if(!failedOut){
+      push({stage:3,loc:'OS → Tarayıcı',title:'Cevap geri döner (2/2)',nodes:['os','browser'],edge:['browser','os'],dir:-1,ptype:'ok',
+        body:[`<p>OS cevabı kendi cache'ine yazıp tarayıcıya verir. Tarayıcı da kendi cache'ine yazar.</p>`,
+          `<dl class="kv"><dt>Dönen IP</dt><dd class="mono">93.184.x.x</dd><dt>TTL</dt><dd>${ttl()} sn geri sayım başlar</dd></dl>`]});
+      push({stage:3,loc:'Bağlantı',title:'DNS\'in işi bitti',nodes:['browser'],edge:null,ptype:'ok',
+        body:[`<p>Tarayıcı IP'yi aldı; sıra TCP handshake, TLS, HTTP'de. <b>DNS artık devrede değil.</b></p>`,
+          `<div class="note">Bu yüzden bağlantı kurulduktan sonra DNS çökse bile mevcut bağlantı çalışır; DNS yalnızca <b>yeni</b> bir isim çözerken gerekir.</div>`]});
+    }
+  }
+
+  // ---- AŞAMA 5 (LLMNR/NBT-NS/mDNS fallback senaryosu) ----
+  if(llmnrActive){
+    push({stage:4,loc:'DNS başarısız',title:'DNS "yok" dedi (NXDOMAIN)',nodes:['os'],edge:null,ptype:'danger',
+      body:[`<p><code>${domain}</code> tek kelimelik; suffix eklenip DNS'e soruldu ve <span class="tag danger">NXDOMAIN</span> döndü. Windows pes etmez — sırayla yerel ağ mekanizmalarını dener.</p>`,
+        `<div class="note sec">Bundan sonrası yalnızca <b>LAN</b>'dadır (broadcast/multicast); internetteki bir ismi asla çözmez. Üçünün de ortak günahı: <b>kimlik doğrulaması yok, ilk cevap kazanır.</b></div>`]});
+    push({stage:4,loc:'1 · LLMNR',title:'LLMNR — multicast sorgu',nodes:['os','lan'],edge:['os','lan'],dir:1,ptype:'warn',
+      body:[`<p>İlk fallback. Windows <b>multicast</b> ile sorar: "<code>${domain}</code> kimde?"</p>`,
+        `<dl class="kv"><dt>Protokol</dt><dd>LLMNR</dd><dt>Port</dt><dd>UDP 5355</dd><dt>Hedef</dt><dd>multicast 224.0.0.252 / ff02::1:3</dd><dt>Kapsam</dt><dd>aynı subnet'teki herkes duyar</dd></dl>`,
+        `<div class="note">Wireshark filtresi: <code>llmnr</code>. Meşru bir cevap gelmezse bir sonraki mekanizmaya geçilir.</div>`]});
+    push({stage:4,loc:'2 · NBT-NS',title:'NetBIOS — broadcast sorgu',nodes:['os','lan'],edge:['os','lan'],dir:1,ptype:'warn',
+      body:[`<p>LLMNR cevapsız kaldı. Şimdi eski NetBIOS mekanizması <b>broadcast</b> ile sorar. WINS sunucusu tanımlıysa önce ona sorulur.</p>`,
+        `<dl class="kv"><dt>Protokol</dt><dd>NBT-NS (NetBIOS Name Service)</dd><dt>Port</dt><dd>UDP 137</dd><dt>Hedef</dt><dd>broadcast (subnet geneli)</dd><dt>İsim</dt><dd>15 karakter, BÜYÜK harfe çevrilir</dd></dl>`,
+        `<div class="note">Wireshark filtresi: <code>nbns</code>. DOS/LAN Manager mirası; çok eski ama hâlâ varsayılan açık gelir.</div>`]});
+    push({stage:4,loc:'3 · mDNS',title:'mDNS — multicast (.local)',nodes:['os','lan'],edge:['os','lan'],dir:1,ptype:'warn',
+      body:[`<p>Üçüncü mekanizma: Multicast DNS. Özellikle <code>.local</code> isimleri ve yazıcı/IoT keşfinde. Modern Windows, macOS (Bonjour) ve Linux (Avahi) destekler.</p>`,
+        `<dl class="kv"><dt>Protokol</dt><dd>mDNS (Multicast DNS)</dd><dt>Port</dt><dd>UDP 5353</dd><dt>Hedef</dt><dd>multicast 224.0.0.251 / ff02::fb</dd></dl>`,
+        `<div class="note">Wireshark filtresi: <code>mdns</code>. Üç filtreyi birden izlemek için: <code>llmnr || nbns || mdns</code></div>`]});
+    push({stage:4,loc:'Responder',title:'Saldırgan sahte cevap verir',nodes:['lan'],edge:['os','lan'],dir:-1,ptype:'danger',
+      body:[`<p>Bu multicast/broadcast sorgularına meşru kimse cevap vermez. Ağdaki saldırgan (<b>Responder</b>) her birine "evet, o benim!" der. Kurban onu gerçek sunucu sanıp bağlanmaya çalışır; SMB'de Windows <b>otomatik</b> olarak kullanıcının NTLM kimliğini sunar.</p>`,
+        `<dl class="kv"><dt>Yakalanan</dt><dd>NTLMv2-SSP challenge-response hash</dd><dt>Sonra</dt><dd>hashcat -m 5600 (crack) / ntlmrelayx (relay)</dd></dl>`,
+        `<div class="note sec"><b>Savunma:</b> LLMNR + NBT-NS'i GPO ile kapat; SMB signing'i zorunlu kıl (relay'i etkisizleştirir). <b>Etik:</b> yalnızca izole lab / izinli test.</div>`]});
+  }
+
+  return S;
+}
+
+/* küçük yardımcılar */
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function rid(){return rand(0,65535).toString(16).padStart(4,'0')}
+function randPort(){return rand(1024,65535)}
+function ttl(){return [60,300,600,3600,86400][rand(0,4)]}
+
+/* ---- SVG render ---- */
+function renderSVG(step){
+  const active=new Set(step?step.nodes:[]);
+  const vis=new Set(['browser','os','resolver']);
+  const fwd=$('#sc-fwd').checked, cache=$('#sc-cache').checked, llmnr=$('#sc-llmnr').checked && domain.split('.').length===1;
+  if(!cache && !fwd){vis.add('root');vis.add('tld');vis.add('auth');}
+  if(fwd){vis.add('fwd');if(!cache){vis.add('root');vis.add('tld');vis.add('auth');}}
+  if(llmnr){vis.add('lan');}
+  // genişlik — sağdaki düğümler (x=470 + 108 = 578) sığsın diye viewBox geniş tutulur
+  const W=600,H=300;
+  let edgesSVG='';
+  EDGES.forEach(([a,b])=>{
+    if(!vis.has(a)||!vis.has(b))return;
+    const A=NODES[a],B=NODES[b];
+    const isActive = step && step.edge && ((step.edge[0]===a&&step.edge[1]===b)||(step.edge[0]===b&&step.edge[1]===a));
+    edgesSVG+=`<line x1="${A.x+54}" y1="${A.y+18}" x2="${B.x+54}" y2="${B.y+18}" stroke="${isActive?'var(--accent)':'var(--border-strong)'}" stroke-width="${isActive?2.5:1.5}" ${isActive?'':'stroke-dasharray="4 4"'} opacity="${isActive?1:.55}"/>`;
+  });
+  let nodesSVG='';
+  Object.entries(NODES).forEach(([k,n])=>{
+    if(!vis.has(k))return;
+    const on=active.has(k);
+    nodesSVG+=`<g opacity="${on?1:.82}">
+      <rect x="${n.x}" y="${n.y}" width="108" height="36" rx="9"
+        fill="${on?'var(--accent-soft)':'var(--surface-2)'}" stroke="${on?'var(--accent)':'var(--border-strong)'}" stroke-width="${on?2:1}"/>
+      <text x="${n.x+54}" y="${n.y+15}" text-anchor="middle" class="node-label" fill="var(--fg)">${n.label}</text>
+      <text x="${n.x+54}" y="${n.y+27}" text-anchor="middle" class="node-sub" fill="var(--muted)">${n.sub}</text>
+    </g>`;
+  });
+  // paket noktası
+  let pktSVG='';
+  if(step&&step.edge&&step.ptype!==undefined){
+    const A=NODES[step.edge[0]],B=NODES[step.edge[1]];
+    const dir=step.dir||1;
+    const from=dir>0?A:B, to=dir>0?B:A;
+    const col={q:'var(--q)',ok:'var(--ok)',warn:'var(--warn)',danger:'var(--danger)'}[step.ptype]||'var(--accent)';
+    pktSVG=`<circle r="7" fill="${col}" stroke="var(--surface)" stroke-width="2">
+      <animate attributeName="cx" from="${from.x+54}" to="${to.x+54}" dur="0.9s" fill="freeze"/>
+      <animate attributeName="cy" from="${from.y+18}" to="${to.y+18}" dur="0.9s" fill="freeze"/>
+    </circle>`;
+  }
+  $('#svgHolder').innerHTML=`<svg class="topology" viewBox="0 0 ${W} ${H}" role="img" aria-label="DNS topolojisi">
+    <rect x="46" y="38" width="162" height="150" rx="12" fill="none" stroke="var(--border)" stroke-dasharray="3 4"/>
+    <text x="52" y="33" class="node-sub" fill="var(--muted)" font-family="var(--mono)">İSTEMCİ</text>
+    ${edgesSVG}${nodesSVG}${pktSVG}
+  </svg>`;
+}
+
+/* ---- Aşama noktaları ---- */
+function renderDots(){
+  const cur=idx>=0?steps[idx].stage:-1;
+  const present=new Set(steps.map(s=>s.stage));
+  $('#stageDots').innerHTML=STAGE_NAMES.map((nm,i)=>{
+    if(!present.has(i)) return `<div class="sdot" style="opacity:.35"><span class="k">A${i+1}</span><span class="t">${nm}</span></div>`;
+    const st = i<cur?'done':(i===cur?'active':'');
+    return `<div class="sdot" data-state="${st}" data-stage="${i}"><span class="k">A${i+1}${st==='done'?' ✓':''}</span><span class="t">${nm}</span></div>`;
+  }).join('');
+  $$('#stageDots .sdot[data-stage]').forEach(d=>d.addEventListener('click',()=>{
+    const first=steps.findIndex(s=>s.stage==+d.dataset.stage);
+    if(first>=0)goto(first);
+  }));
+}
+
+/* ---- Ders render ---- */
+function renderLesson(){
+  if(idx<0){return;}
+  const s=steps[idx];
+  $('#lBadge').textContent='A'+(s.stage+1);
+  $('#lTitle').textContent=s.title;
+  $('#lLoc').textContent=s.loc+' · '+STAGE_NAMES[s.stage];
+  $('#lBody').innerHTML=s.body.join('');
+}
+
+function goto(i){
+  idx=Math.max(0,Math.min(steps.length-1,i));
+  const s=steps[idx];
+  renderSVG(s);renderDots();renderLesson();
+  $('#stepCount').textContent=`adım ${idx+1} / ${steps.length}`;
+  $('#prevBtn').disabled=idx<=0;
+  $('#nextBtn').disabled=idx>=steps.length-1;
+  $('#lesson').scrollTop=0;
+}
+function next(){ if(idx<steps.length-1)goto(idx+1); else stopPlay(); }
+function prev(){ if(idx>0)goto(idx-1); }
+function stopPlay(){playing=false;clearInterval(playTimer);$('#playBtn').textContent='▶';}
+function startPlay(){
+  if(idx>=steps.length-1)goto(0);
+  playing=true;$('#playBtn').textContent='⏸';
+  playTimer=setInterval(()=>{ if(idx>=steps.length-1){stopPlay();return;} next(); },1700);
+}
+
+function rebuild(){
+  stopPlay();
+  steps=buildSteps();
+  idx=-1; goto(0);
+}
+
+$('#buildBtn').addEventListener('click',rebuild);
+$('#restartBtn').addEventListener('click',()=>{stopPlay();goto(0);});
+$('#playBtn').addEventListener('click',()=>{playing?stopPlay():startPlay();});
+$('#nextBtn').addEventListener('click',()=>{stopPlay();next();});
+$('#prevBtn').addEventListener('click',()=>{stopPlay();prev();});
+$('#domainInput').addEventListener('keydown',e=>{if(e.key==='Enter')rebuild();});
+function onScenarioChange(e){
+  // LLMNR senaryosu yalnızca tek kelimelik isimlerde anlamlı; toggle açılınca girdiyi uygun bir isme çevir
+  if(e&&e.target&&e.target.id==='sc-llmnr'&&e.target.checked){
+    const v=($('#domainInput').value||'').trim();
+    if(v.includes('.')||v==='') $('#domainInput').value='fileserver01';
+  }
+  rebuild();
+}
+$$('#scenario input').forEach(c=>c.addEventListener('change',onScenarioChange));
+rebuild();
+
+/* =====================================================================
+   MODÜL 1 — PAKET ANATOMİSİ
+   ===================================================================== */
+const PKT_FIELDS=[
+  {n:'Transaction ID',v:'0x8f3a',d:'<b>Transaction ID</b> (16 bit, rastgele). Cevabı sorguyla eşleştirir. Cache poisoning\'de saldırganın tutturması gereken ilk değer budur — 65.536 ihtimal.'},
+  {n:'QDCOUNT',v:'1',d:'Question bölümündeki soru sayısı. Neredeyse her zaman 1\'dir.'},
+  {n:'ANCOUNT',v:'0→1',d:'Answer bölümündeki kayıt sayısı. Sorguda 0, başarılı cevapta ≥1. NOERROR ama ANCOUNT=0 ise: isim var, ama o tipte kayıt yok.'},
+  {n:'NSCOUNT',v:'0',d:'Authority bölümündeki kayıt sayısı. Referral\'da NS kayıtları, NXDOMAIN\'de SOA burada döner.'},
+  {n:'ARCOUNT',v:'1',d:'Additional bölümü. Glue record\'lar ve EDNS (OPT) kaydı burada taşınır.'},
+  {n:'QUESTION',v:'example.com A IN',d:'<b>Question</b> bölümü: isim, tip (A/AAAA/MX…), sınıf (IN). Cevapta birebir yankılanır; saldırganın bunu da tutturması gerekir.'},
+  {n:'ANSWER',v:'A 93.184.x.x',d:'<b>Answer</b> bölümü: asıl cevap kayıtları. A, AAAA, CNAME, MX… her birinin yanında TTL vardır.'},
+  {n:'AUTHORITY',v:'NS / SOA',d:'<b>Authority</b> bölümü: bu zone\'dan kim sorumlu. Referral\'da NS, negatif cevapta SOA.'},
+  {n:'ADDITIONAL',v:'glue / OPT',d:'<b>Additional</b> bölümü: yardımcı kayıtlar. Glue IP\'leri ve EDNS\'in "4096 byte alabilirim" bilgisi.'},
+];
+const PKT_FLAGS=[
+  {k:'QR',on:true,d:'<b>QR</b> — 0 soru, 1 cevap. Bu paketin yönünü söyler.'},
+  {k:'AA',on:false,d:'<b>AA (Authoritative Answer)</b> — 1 ise cevap zone\'un sahibinden geldi. Public resolver\'dan gelen cevapta AA\'yı görmezsin (cache/recursion).'},
+  {k:'TC',on:false,d:'<b>TC (Truncated)</b> — cevap UDP\'ye sığmadı. Resolver aynı sorguyu TCP/53 ile tekrar sorar.'},
+  {k:'RD',on:true,d:'<b>RD (Recursion Desired)</b> — istemci "benim için sonuna kadar çöz" diyor. Stub→resolver sorgusunda 1; root/TLD bunu yok sayar.'},
+  {k:'RA',on:true,d:'<b>RA (Recursion Available)</b> — sunucu recursion hizmeti veriyor. AA yok + RA var → cevap resolver\'ın cache/recursion\'ından geldi.'},
+  {k:'AD',on:false,d:'<b>AD (Authenticated Data)</b> — DNSSEC doğrulaması başarılı. Cevabın kriptografik olarak imzalı ve doğrulanmış olduğunu belirtir.'},
+];
+function renderPacket(){
+  const f=$('#pktFields');
+  f.innerHTML=`<div class="pkt-row">${PKT_FIELDS.slice(0,5).map((x,i)=>fieldHTML(x,i)).join('')}</div>
+    <div class="pkt-row" style="margin-top:4px">${PKT_FIELDS.slice(5).map((x,i)=>fieldHTML(x,i+5)).join('')}</div>`;
+  $('#pktFlags').innerHTML=PKT_FLAGS.map((x,i)=>`<button class="bit ${x.on?'on':'off'}" data-fi="${i}">${x.k} <span class="v">${x.on?1:0}</span></button>`).join('');
+  $$('#pktFields .field').forEach(el=>el.addEventListener('click',()=>{
+    $$('.field,.bit').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');
+    const x=PKT_FIELDS[+el.dataset.fi];setExplain(x.n,x.d);
+  }));
+  $$('#pktFlags .bit').forEach(el=>el.addEventListener('click',()=>{
+    $$('.field,.bit').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');
+    const x=PKT_FLAGS[+el.dataset.fi];setExplain('FLAG · '+x.k,x.d);
+  }));
+}
+function fieldHTML(x,i){return `<div class="field" data-fi="${i}"><span class="fn">${x.n}</span><span class="fv">${x.v}</span></div>`;}
+function setExplain(title,body){$('#pktExplain').innerHTML=`<h4>${title}</h4><p>${body}</p>`;}
+renderPacket();
+
+/* =====================================================================
+   MODÜL 2 — CACHE & TTL
+   ===================================================================== */
+let cacheEntries=[
+  {dom:'example.com',ttl:3600,max:3600,neg:false},
+  {dom:'cdn.example.com',ttl:120,max:120,neg:false},
+  {dom:'yok.example.com',ttl:900,max:900,neg:true},
+];
+function renderCache(){
+  const l=$('#cacheList');
+  if(!cacheEntries.length){l.innerHTML='<p class="hint" style="color:var(--muted);font-size:12.5px">Cache boş. Aşağıdan bir isim sorgula.</p>';return;}
+  l.innerHTML=cacheEntries.map((e,i)=>{
+    const pct=Math.max(0,e.ttl/e.max*100);
+    const exp=e.ttl<=0;
+    return `<div class="cacherow ${e.neg?'neg':''} ${exp?'expired':''}">
+      <span class="badge-s ${e.neg?'negb':'pos'}">${e.neg?'NEG':'A'}</span>
+      <span class="dom">${e.dom}</span>
+      <span class="ttlbar"><i style="width:${pct}%"></i></span>
+      <span class="ttlnum">${exp?'expired':e.ttl+'s'}</span>
+    </div>`;
+  }).join('');
+}
+function logLine(mark,cls,txt){
+  const box=$('#resolveLog');
+  if(box.children.length===1&&box.children[0].querySelector('.out')&&box.textContent.includes('cache hit/miss')) box.innerHTML='';
+  const d=document.createElement('div');d.className='ln';
+  d.innerHTML=`<span class="mk ${cls}">${mark}</span><span>${txt}</span>`;
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+  while(box.children.length>9)box.removeChild(box.firstChild);
+}
+$('#cacheQuery').addEventListener('click',()=>{
+  const dom=($('#cacheDomain').value||'').trim().toLowerCase();if(!dom)return;
+  const hit=cacheEntries.find(e=>e.dom===dom&&e.ttl>0);
+  if(hit){
+    logLine('HIT','hit',`<b>${dom}</b> cache'te (kalan ${hit.ttl}s) — ${hit.neg?'negatif cache, NXDOMAIN döner':'dışarı çıkmadan döndü'}.`);
+  } else {
+    const existsExpired=cacheEntries.find(e=>e.dom===dom);
+    logLine('MISS','miss',`<b>${dom}</b> ${existsExpired?'TTL dolmuş':'cache\'te yok'} → resolver dışarı çıkıyor…`);
+    logLine('→','out',`root → TLD → authoritative sorgulanıyor, cevap cache'leniyor.`);
+    const neg=Math.random()<0.25;
+    const t=neg?900:[60,300,3600][rand(0,2)];
+    const ex=cacheEntries.find(e=>e.dom===dom);
+    if(ex){ex.ttl=t;ex.max=t;ex.neg=neg;} else cacheEntries.unshift({dom,ttl:t,max:t,neg});
+    logLine(neg?'NEG':'NEW',neg?'miss':'hit',`<b>${dom}</b> ${neg?'NXDOMAIN (negatif)':'A kaydı'} TTL ${t}s ile cache'lendi.`);
+  }
+  renderCache();
+});
+$('#cacheClear').addEventListener('click',()=>{cacheEntries=[];renderCache();logLine('⟲','out','Cache temizlendi (ipconfig /flushdns).');});
+setInterval(()=>{
+  let ch=false;
+  cacheEntries.forEach(e=>{if(e.ttl>0){e.ttl--;ch=true;}});
+  if(ch&&!$('#view-cache').hidden)renderCache();
+},1000);
+renderCache();
+
+/* =====================================================================
+   MODÜL 3 — GÜVENLİK
+   ===================================================================== */
+function updateGuess(){
+  const rand_on=$('#portRand').checked;
+  $('#guessSpace').textContent=rand_on?'~4.3 milyar':'65.536';
+  $('#guessOdds').textContent=rand_on?'1 / 4.3B':'1 / 65.5K';
+}
+$('#portRand').addEventListener('change',updateGuess);updateGuess();
+
+let raceAnim=null;
+$('#raceRun').addEventListener('click',()=>{
+  if(raceAnim)cancelAnimationFrame(raceAnim);
+  const holder=$('#race'),W=holder.clientWidth-130;
+  const L=$('#racerLegit'),A=$('#racerAttack');
+  const randOn=$('#portRand').checked;
+  // saldırgan ID+port tutturmalı: randOn ise neredeyse hep kaybeder
+  const attackerHits = randOn ? (Math.random()<0.002) : (Math.random()<0.4);
+  const legitSpeed=1+Math.random()*0.3;
+  const atkSpeed = attackerHits ? 1.3+Math.random()*0.4 : 0.55+Math.random()*0.25;
+  let lx=8,ax=8;
+  $('#raceVerdict').className='verdict';$('#raceVerdict').textContent='Yarışıyor…';
+  function frame(){
+    lx+=legitSpeed;ax+=atkSpeed;
+    L.style.left=Math.min(lx,W)+'px';A.style.left=Math.min(ax,W)+'px';
+    const lDone=lx>=W,aDone=ax>=W;
+    if(lDone||aDone){
+      if(aDone&&ax>=lx&&attackerHits){
+        $('#raceVerdict').className='verdict win';
+        $('#raceVerdict').textContent='☠ Sahte cevap önce ulaştı — cache zehirlendi!';
+      } else {
+        $('#raceVerdict').className='verdict lose';
+        $('#raceVerdict').textContent=randOn?'✓ Gerçek cevap kazandı. Saldırgan ID+portu tutturamadı.':'✓ Gerçek cevap kazandı (bu sefer).';
+      }
+      return;
+    }
+    raceAnim=requestAnimationFrame(frame);
+  }
+  frame();
+});
+
+const RESPONDER=[
+  {h:'Kullanıcı yanlış isim yazar',p:'DNS → NXDOMAIN',t:'\\\\muhasebe-sever gibi var olmayan bir paylaşım adı. DNS\'te yok.'},
+  {h:'Kurban LAN\'a bağırır',p:'LLMNR UDP 5355 / NBT-NS UDP 137',t:'"Bu isim kimde?" diye multicast/broadcast. Meşru kimse cevap vermez.'},
+  {h:'Responder sahte cevap verir',p:'"evet, o benim"',t:'Ağdaki saldırgan ilk cevabı verir. Kurban onu gerçek sunucu sanır.'},
+  {h:'Kurban kimlik sunar',p:'SMB → NTLM',t:'Windows bağlanırken otomatik olarak kullanıcının NTLM kimliğini sunar.'},
+  {h:'Hash yakalanır',p:'NTLMv2-SSP',t:'Saldırgan challenge-response hash\'i alır → hashcat -m 5600 (crack) veya ntlmrelayx (relay).'},
+];
+$('#responderLadder').innerHTML=RESPONDER.map((r,i)=>`<div class="rung">
+  <div class="step-n">${i+1}</div>
+  <div class="rc"><h4>${r.h} <span class="proto">${r.p}</span></h4><p>${r.t}</p></div>
+</div>`).join('');
+
+/* Aşamalara göre tüm güvenlik konuları */
+const SEC_TOPICS=[
+  {stage:'A1',type:'atk',t:'Punycode / Homograph Phishing',
+   w:'Unicode domainler DNS\'e gitmeden ASCII\'ye (<code>xn--</code>) çevrilir. Saldırgan Kiril "а" gibi göz aldatan karakterlerle gerçeğinden ayırt edilemeyen domainler kaydeder.',
+   ex:'аpple.com → xn--80ak6aa92e.com',
+   d:'Tarayıcı karışık-script domainleri punycode gösterir; URL\'yi ve sertifikayı dikkatle kontrol et.'},
+  {stage:'A1',type:'atk',t:'DoH ile DNS Kaçışı (evasion / C2)',
+   w:'Zararlı yazılım DNS\'i OS yerine HTTPS (DoH) üzerinden çözer. DNS logları, Pi-hole ve kurumsal filtreler bunu göremez; trafik 443\'te sıradan HTTPS gibi görünür.',
+   ex:'UDP 53 ✗  →  TLS 443 (DNS gizlenir)',
+   d:'GPO ile tarayıcı DoH\'u kapat; bilinen DoH endpoint\'lerini engelle; SNI/endpoint izle.'},
+  {stage:'A2',type:'atk',t:'DNS Amplification DDoS',
+   w:'Açık resolver\'a spoof\'lanmış kaynak IP (kurban) ile küçük bir sorgu gönderilir; resolver çok büyük cevabı kurbana yollar (~70x büyütme). Binlerce open resolver ile kurban trafiğe boğulur.',
+   ex:'dig ANY ...  (60 B istek → ~4 KB cevap)',
+   d:'Resolver\'ı herkese açık bırakma (ACL → REFUSED); Response Rate Limiting (RRL); BCP38 kaynak doğrulama.'},
+  {stage:'A2',type:'atk',t:'Cache Poisoning / Kaminsky',
+   w:'Sahte cevabı gerçeğinden <b>önce</b> ulaştırıp Transaction ID + kaynak portu tutturarak resolver cache\'ini zehirleme. Yukarıdaki yarışta canlandırdık.',
+   ex:'ID (16 bit) × port (16 bit) ≈ 4.3 milyar',
+   d:'Source port randomization (RFC 5452), DNSSEC, 0x20 encoding.'},
+  {stage:'A3',type:'atk',t:'Domain Hijacking (NS devralma)',
+   w:'Saldırgan registrar hesabını ele geçirip NS kayıtlarını kendi sunucusuna çevirir. Tüm çözüm zinciri baştan sahte authoritative\'e gider — cache zehirlemeye hiç gerek kalmaz.',
+   ex:'registrar: NS → ns1.attacker.com',
+   d:'Registrar\'da 2FA + registry/registrar lock; NS değişikliklerini sürekli izle.'},
+  {stage:'A3',type:'atk',t:'Subdomain Takeover (dangling DNS)',
+   w:'Bir subdomain hâlâ artık senin olmayan bir bulut kaynağına (CNAME/NS) işaret ediyorsa, saldırgan o kaynağı kaydedip subdomain\'i ele geçirir. Lame delegation\'ın pratik sonucu.',
+   ex:'shop.example.com → CNAME eski-bucket (boş)',
+   d:'Kaynağı silmeden önce DNS kaydını kaldır; dangling kayıtları sürekli envanterle tara.'},
+  {stage:'A3',type:'atk',t:'Zone Transfer (AXFR) — OSINT',
+   w:'Yanlış yapılandırılmış authoritative sunucu, tüm zone\'u (bütün subdomainler) tek komutla dışarı verir. Bir domainin iç haritasının tamamını çıkarırsın.',
+   ex:'dig axfr @ns1.example.com example.com',
+   d:'AXFR\'ı yalnızca yetkili secondary\'lere aç (allow-transfer); TSIG ile imzala.'},
+  {stage:'A1–A4',type:'atk',t:'DNS Tunneling (exfil / C2)',
+   w:'Veri, DNS sorgularının içine (uzun subdomain / TXT) gömülüp dışarı sızdırılır veya bir C2 kanalı kurulur. DNS neredeyse hiç engellenmediği için güvenilir bir kaçış yolu.',
+   ex:'<base32-veri>.tunnel.attacker.com  TXT',
+   d:'Olağandışı uzun/yüksek-entropili subdomain ve yüksek TXT hacmi tespiti (SIEM); sorgu oranı anomalisi.'},
+  {stage:'A5',type:'atk',t:'LLMNR/NBT-NS Poisoning + NTLM Relay',
+   w:'DNS başarısız olunca devreye giren LLMNR/NBT-NS/mDNS kimlik doğrulaması yapmaz. Responder sahte cevap verip NTLMv2 hash yakalar; hash kırılır veya canlı relay edilir. Yukarıda adım adım.',
+   ex:'responder -I eth0  →  ntlmrelayx / hashcat -m 5600',
+   d:'LLMNR + NBT-NS\'i GPO ile kapat; SMB signing\'i zorunlu kıl (relay\'i etkisizleştirir).'},
+  {stage:'A3–A4',type:'def',t:'DNSSEC — Güven Zinciri',
+   w:'Cevapları kriptografik imzalar (DNSKEY → DS → RRSIG). Resolver imzayı root\'tan aşağı doğrular; sahte bir kayıt imzayı geçemez. Cache poisoning\'e kalıcı çözüm. (dig +trace modülünde RRSIG/DS satırlarını gör.)',
+   ex:'dig +dnssec example.com  → ad biti = 1',
+   d:'<b>Bu bir savunma:</b> zone\'u imzala (DNSSEC) + DoT/DoH ile gizlilik + TCP/53\'ü açık bırak (büyük cevap/AXFR).'},
+];
+$('#secTopics').innerHTML=SEC_TOPICS.map(x=>`<div class="panel card seccard">
+  <div class="sechead">
+    <span class="stage-chip">${x.stage}</span>
+    <span class="atk-lbl ${x.type}">${x.type==='atk'?'SALDIRI':'SAVUNMA'}</span>
+  </div>
+  <h4>${x.t}</h4>
+  <p>${x.w}</p>
+  <div class="ex">${x.ex}</div>
+  <div class="def"><b>${x.type==='atk'?'Savunma:':'Uygula:'}</b> ${x.d}</div>
+</div>`).join('');
+
+/* =====================================================================
+   MODÜL 4 — dig +trace
+   ===================================================================== */
+/* Gerçek dig +trace çıktısı (DNSSEC açık, example.com → Cloudflare) */
+const E_ROOTNS=['Root NS listesi (13)','+trace önce root sunucularının tam listesini alır: 13 isim (a–m.root-servers.net), anycast ile dünyada 1500+ fiziksel kopyada yayınlanır. TTL 22644 burada cache\'ten kalan süre olduğu için kırık bir sayı. Zincir buradan başlar.'];
+const E_RRSIG_NS=['RRSIG — DNSSEC imzası','Root NS kümesinin kriptografik imzası. DNSSEC açıkken her yanıt imzalanır; resolver imzayı doğrulayıp cevabın sahte olmadığını matematiksel olarak garantiler. Cache poisoning\'e kalıcı çözüm budur. (Hash kısaltıldı.)'];
+const E_COMNS=['Referral → .com (13 NS)','Root\'un cevabı: ".com için şu gtld-servers\'lara git". Root IP vermez, bir sonraki katmanı gösterir (delegasyon). TTL 172800 = 2 gün; bu kayıtlar neredeyse hiç değişmez.'];
+const E_RECV_ROOT=['Received from · ROOT','Bu bloğu bir ROOT sunucusu (i.root-servers.net) verdi. İçeriği .com\'a yönlendirme + DNSSEC delegasyonu.'];
+const E_RECV_GTLD=['Received from · TLD (.com)','Bu bloğu .com TLD sunucusu (g.gtld-servers.net) verdi. example.com\'un authoritative NS\'lerine (Cloudflare) yönlendiriyor.'];
+const rootNS=['f','i','m','c','l','d','b','g','a','h','e','j','k'];
+const comNS=['f','d','i','j','b','h','g','e','a','l','m','c','k'];
+const TRACE=[
+  {t:'$ dig +trace example.com',cls:'',e:['Komut','+trace modunda dig, resolver\'ın yerine geçer ve iteratif adımları (root → TLD → authoritative) kendisi yürütüp sana gösterir.']},
+  {t:'; <<>> DiG 9.20.29-1-Debian <<>> +trace example.com',cls:'recv',e:['Başlık','dig sürümü ve sorgulanan isim.']},
+  ...rootNS.map(x=>({t:`.\t\t22644\tIN\tNS\t${x}.root-servers.net.`,cls:'',e:E_ROOTNS})),
+  {t:'.\t\t29992\tIN\tRRSIG\tNS 8 0 518400 … 8763 . n55wK0l+…',cls:'dnssec',e:E_RRSIG_NS},
+  {t:';; Received 1097 bytes from 192.168.1.1#53(192.168.1.1) in 3 ms',cls:'recv',e:['Received from · yerel resolver','İlk NS listesini veren yer (senin modemin/resolver\'ın). Buradan sonra dig iteratif adımları kendisi yürütür.']},
+  {t:';; UDP setup with 2001:503:ba3e::2:30#53 … failed: network unreachable.',cls:'fail',e:['IPv6 ulaşılamadı — zararsız','dig bir sonraki sunucuya önce IPv6 (2001:…) ile ulaşmayı denedi; ağında IPv6 yok, o yüzden "network unreachable". dig otomatik IPv4\'e düşer ve devam eder. Çözümü etkilemez, sadece görüntü kirliliği.']},
+  {t:';; no servers could be reached',cls:'fail',e:['no servers could be reached','Yukarıdaki IPv6 denemesinin sonucu. dig aynı sunucunun IPv4 adresini deneyecek; panik yok.']},
+  ...comNS.map(x=>({t:`com.\t\t172800\tIN\tNS\t${x}.gtld-servers.net.`,cls:'',e:E_COMNS})),
+  {t:'com.\t\t86400\tIN\tDS\t19718 13 2 8ACBB0CD28F4…',cls:'dnssec',e:['DS — Delegation Signer (.com)','DNSSEC güven zincirinin halkası. Root, .com\'un anahtarının (DNSKEY) hash\'ini (DS) imzalayarak güveni .com\'a devreder. Resolver bu zinciri root\'tan aşağı doğru doğrular.']},
+  {t:'com.\t\t86400\tIN\tRRSIG\tDS 8 1 86400 … 8763 . e4NpIrX3…',cls:'dnssec',e:['RRSIG DS — imza','DS kaydının root anahtarıyla imzası. Güven zinciri: root → .com → example.com, her adımda imzalı.']},
+  {t:';; Received 1199 bytes from 192.36.148.17#53(i.root-servers.net) in 39 ms',cls:'recv',e:E_RECV_ROOT},
+  {t:'example.com.\t172800\tIN\tNS\thera.ns.cloudflare.com.',cls:'',e:['Referral → example.com','TLD\'nin cevabı: "example.com için yetkili NS = Cloudflare". Bu bilgi domain sahibinin registrar\'da girdiği NS kayıtlarından gelir — buradan sitenin Cloudflare DNS kullandığını anlarsın (OSINT).']},
+  {t:'example.com.\t172800\tIN\tNS\telliott.ns.cloudflare.com.',cls:'',e:['Referral → example.com (2. NS)','İkinci authoritative NS. İki NS olması dayanıklılık içindir; biri düşse diğeri cevap verir.']},
+  {t:'example.com.\t86400\tIN\tDS\t2371 13 2 C988EC423E…',cls:'dnssec',e:['DS — example.com','.com, example.com\'un anahtarının hash\'ini imzalar; güven zinciri bir adım daha iner.']},
+  {t:'example.com.\t86400\tIN\tRRSIG\tDS 13 2 86400 … 41446 com. l9qYT6…',cls:'dnssec',e:['RRSIG DS — imza (.com anahtarıyla)','example.com DS kaydının .com anahtarıyla imzası. Algoritma 13 = ECDSA P-256 (Cloudflare\'in tercihi, kısa imzalar).']},
+  {t:';; Received 506 bytes from 192.42.93.30#53(g.gtld-servers.net) in 51 ms',cls:'recv',e:E_RECV_GTLD},
+  {t:'example.com.\t300\tIN\tA\t104.20.23.154',cls:'ans',e:['Nihai A kaydı (1/2)','authoritative (Cloudflare) sunucunun cevabı. AA=1, ANSWER dolu — aranan IP bu. TTL 300 = 5 dk; Cloudflare kısa tutar (hızlı değişim/failover). Zincirin sonu.']},
+  {t:'example.com.\t300\tIN\tA\t172.66.147.243',cls:'ans',e:['Nihai A kaydı (2/2) · round-robin','İkinci bir A kaydı. Büyük siteler birden çok IP döner (DNS round-robin / anycast); istemci birini seçer, olmazsa diğerine geçer. Basit yük dağıtımı + dayanıklılık.']},
+  {t:'example.com.\t300\tIN\tRRSIG\tA 13 2 300 … 34505 example.com. FjkjWA+…',cls:'dnssec',e:['RRSIG A — cevabın imzası','A kayıtlarının example.com anahtarıyla imzası. Resolver güven zincirini (root→com→example.com→bu imza) doğrularsa cevabı "authenticated" (AD=1) kabul eder. Sahte bir A kaydı bu imzayı geçemez.']},
+  {t:';; Received 179 bytes from 108.162.195.228#53(elliott.ns.cloudflare.com) in 3 ms',cls:'recv',e:['Received from · AUTHORITATIVE','Bu bloğu example.com\'un authoritative sunucusu (Cloudflare) verdi. Yukarıdan aşağı: root → gtld → cloudflare. Tüm iteratif yolculuk bu üç "Received from" satırında özetlenir.']},
+];
+function renderTrace(){
+  $('#traceBox').innerHTML=TRACE.map((l,i)=>`<button class="tl ${l.cls||''}" data-ti="${i}">${l.t.replace(/</g,'&lt;')}</button>`).join('');
+  $$('#traceBox .tl').forEach(el=>el.addEventListener('click',()=>{
+    $$('#traceBox .tl').forEach(e=>e.classList.remove('active'));el.classList.add('active');
+    const x=TRACE[+el.dataset.ti];
+    $('#traceExplain').innerHTML=`<h4>${x.e[0]}</h4><p>${x.e[1]}</p>`;
+  }));
+}
+renderTrace();
+</script>
+
+</body></html>

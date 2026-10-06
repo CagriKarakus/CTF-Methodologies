@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chrome Parola Çıkarma - DPAPI.md",
+                "file": "DNS Nasıl Çalışır - 5 Aşama.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Chrome Parola Çıkarma - DPAPI"
+              "title": "DNS Nasıl Çalışır - 5 Aşama"
             }
           }
         ]
@@ -190,8 +190,10 @@
   },
   "active": "417040ffed2f0a59",
   "lastOpenFiles": [
-    "Home.md",
+    "projects/DNS Çözümleme Laboratuvarı.html",
+    "projects",
     "Chrome Parola Çıkarma - DPAPI.md",
+    "Home.md",
     "WEB/File Inclusion - Path Traversal.md",
     "_AI-CONTEXT.md",
     "Active Directory.md",

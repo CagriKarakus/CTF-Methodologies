@@ -28,4 +28,4 @@ Active Directory:
 ---
 
 **Up:** [Home](Home.md)
-**Related:** [THM-Ra-Writeup](THM-WriteUps/THM-Ra-Writeup.md) · [Windows Local Persistence](Windows%20persistence/Windows%20Local%20Persistence.md) · [linux Privesc basic adımları](linux%20Privesc%20basic%20ad%C4%B1mlar%C4%B1.md) · [Chrome Parola Çıkarma - DPAPI](Chrome%20Parola%20%C3%87%C4%B1karma%20-%20DPAPI.md)
+**Related:** [THM-Ra-Writeup](THM-WriteUps/THM-Ra-Writeup.md) · [Windows Local Persistence](Windows%20persistence/Windows%20Local%20Persistence.md) · [linux Privesc basic adımları](linux%20Privesc%20basic%20ad%C4%B1mlar%C4%B1.md) · [Chrome Parola Çıkarma - DPAPI](Chrome%20Parola%20%C3%87%C4%B1karma%20-%20DPAPI.md) · [DNS Nasıl Çalışır - 5 Aşama](DNS%20Nas%C4%B1l%20%C3%87al%C4%B1%C5%9F%C4%B1r%20-%205%20A%C5%9Fama.md)
