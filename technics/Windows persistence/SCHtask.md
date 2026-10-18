@@ -104,4 +104,4 @@ Görev gizli ama hâlâ aktif — her dakika tetiklenmeye devam eder.
 ---
 
 **Up:** [Windows Persistence - Index](Windows%20Persistence%20-%20Index.md)
-**Related:** [Using Windows Services](Using%20Windows%20Services.md) · [Logon Based Persistence](Logon%20Based%20Persistence.md) · [Security Descriptor](Security%20Descriptor.md)
+**Related:** [Using Windows Services](Using%20Windows%20Services.md) · [Logon Based Persistence](Logon%20Based%20Persistence.md) · [Security Descriptor](Security%20Descriptor.md) · [Phishing Kill Chain - Splunk Investigation Methodology](../SOC-Investigations/Phishing%20Kill%20Chain%20-%20Splunk%20Investigation%20Methodology.md) (savunma tarafı: Splunk'ta schtasks tespiti)

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "DNS Nasıl Çalışır - 5 Aşama.md",
+                "file": "SOC-Investigations/Cross-Source Correlation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "DNS Nasıl Çalışır - 5 Aşama"
+              "title": "Cross-Source Correlation"
             }
           }
         ]
@@ -190,29 +190,43 @@
   },
   "active": "417040ffed2f0a59",
   "lastOpenFiles": [
-    "projects/DNS Çözümleme Laboratuvarı.html",
-    "projects",
-    "Chrome Parola Çıkarma - DPAPI.md",
-    "Home.md",
-    "WEB/File Inclusion - Path Traversal.md",
-    "_AI-CONTEXT.md",
-    "Active Directory.md",
+    "SOC-Investigations/Phishing Kill Chain - Splunk Investigation Methodology.md",
+    "SOC-Investigations/SOC Investigations - Index.md",
+    "SOC-Investigations/Splunk SPL Patterns for IR.md",
+    "SOC-Investigations/Sysmon and Windows Event ID Guide.md",
+    "SOC-Investigations/Cross-Source Correlation.md",
     "linux Privesc basic adımları.md",
-    "regex.md",
-    "WEB/Path traversal saldırılarında karşılaşılan zorluklar.md",
-    "Windows persistence/Windows Persistence - Index.md",
+    "Home.md",
+    "THM-Notes/missingPerson/boiler/ferox-http_10_114_174_99_joomla-1792285671.state",
+    "THM-Notes/missingPerson/boiler/open_ports.txt",
+    "THM-Notes/missingPerson/boiler",
+    "THM-Notes/missingPerson/osint-1767765507985/food.jpg",
+    "THM-Notes/missingPerson/osint-1767765507985/MotoGP.jpg",
+    "THM-Notes/missingPerson/osint-1767765507985",
+    "THM-Notes/missingPerson/osint-1767765507985.zip",
+    "THM-Notes/missingPerson",
+    "Volatility Memory Forensics Cheatsheet.md",
+    "Active Directory.md",
+    "Chrome Parola Çıkarma - DPAPI.md",
+    "Executable %26 Shortcut File Hijacking.md",
     "THM-WriteUps/THM-Ra-Writeup.md",
-    "Windows persistence/Backdooring Existing Services.md",
-    "Windows persistence/Windows Local Persistence.md",
-    "Windows persistence/Executable & Shortcut File Hijacking.md",
+    "_AI-CONTEXT.md",
+    "THM-Notes/CTF-collections2/request.txt",
+    "THM-Notes/CTF-collections2/open_ports.txt",
+    "THM-Notes/CTF-collections2",
+    "DNS Nasıl Çalışır - 5 Aşama.md",
+    "Windows persistence/RID hijacking.md",
+    "Windows persistence/Windows Persistence - Index.md",
+    "Windows persistence/Security Descriptor.md",
     "Windows persistence/Login Screen Backdooring.md",
+    "Windows persistence/Backdooring Existing Services.md",
     "Windows persistence/Logon Based Persistence.md",
     "Windows persistence/SCHtask.md",
     "Windows persistence/Using Windows Services.md",
-    "Windows persistence/Security Descriptor.md",
-    "Windows persistence/RID hijacking.md",
-    "Windows persistence",
-    "WEB",
-    "Welcome.md"
+    "Windows persistence/Windows Local Persistence.md",
+    "regex.md",
+    "Windows persistence/Executable & Shortcut File Hijacking.md",
+    "WEB/File Inclusion - Path Traversal.md",
+    "projects/DNS Çözümleme Laboratuvarı.html"
   ]
 }

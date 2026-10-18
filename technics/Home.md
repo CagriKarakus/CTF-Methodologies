@@ -28,5 +28,9 @@ Bu vault'un giriş noktası. Her not buradan en fazla iki adımda erişilebilir.
 ## Referans
 - [regex](regex.md): Regex hızlı referansı (escape, karakter sınıfları, aralıklar).
 
+## Incident Response
+- [Volatility Memory Forensics Cheatsheet](Volatility%20Memory%20Forensics%20Cheatsheet.md) volatility kullanalarak linux memory analizi
+- [SOC Investigations - Index](SOC-Investigations/SOC%20Investigations%20-%20Index.md): Splunk ile çok kaynaklı olay inceleme notları — Phishing kill chain metodolojisi, Sysmon/Windows Event ID rehberi, kaynaklar arası korelasyon, SPL kalıpları.
+- [Phishing Kill Chain - Splunk Investigation Methodology](SOC-Investigations/Phishing%20Kill%20Chain%20-%20Splunk%20Investigation%20Methodology.md): Phishing mailinden C2/staging/exfil'e kanıt zinciri — hangi soruyu hangi kaynağa neden ve nasıl sorarsın (mail → indirme → execution → persistence → C2 → SMB).
 ## Meta
 - [_AI-CONTEXT](_AI-CONTEXT.md): AI ajanı için brifing — vault yapısı, yazım/bağlantı kuralları ve yeni not ekleme akışı. Yeni bir göreve başlamadan önce bununla Home okunur.

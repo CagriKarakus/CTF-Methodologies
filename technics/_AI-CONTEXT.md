@@ -5,7 +5,7 @@ tags: [meta, ai-context, instructions]
 ---
 # _AI-CONTEXT — Ajan Brifingi
 
-> Bu dosya, bir AI ajanının (Claude) bu Obsidian vault'unda çalışırken **tüm notları okumadan** bağlamı kavraması içindir. Yeni bir göreve başlarken **önce bu dosyayı, sonra [Home](Home.md)'u** oku; bu ikisi tüm yapıyı ve kuralları verir. Tek tek notları yalnızca o notu düzenleyeceksen aç.
+> Bu dosya, bir AI ajanının (Claude) bu Obsidian vault'unda çalışırken **tüm notları okumadan** bağlamı kavraması içindir. Yeni bir göreve başlarken **önce bu dosyayı, sonra [Home](Home.md)'u** oku; bu ikisi tüm yapıyı ve kuralları verir. Tek tek notları yalnızca o notu düzenleyeceksen aç.  THM-Notes hehangi bir şey ile alakası yok o klasörü es geçebilirsin.
 
 ## Vault nedir
 Sahibinin adı Çağrı. Bu, bir **siber güvenlik / CTF metodoloji** vault'u. Amaç: teknik, saldırı akışı ve write-up notlarını birbirine bağlı, graph'te gezilebilir bir bilgi ağı olarak tutmak.
@@ -18,6 +18,7 @@ Sahibinin adı Çağrı. Bu, bir **siber güvenlik / CTF metodoloji** vault'u. A
 - `Home.md` — **ana MOC / manifest.** Her notun bir satırlık açıklamasıyla listesi burada. Vault'un canlı haritası budur; yeni not eklenince **burası güncellenir**.
 - `WEB/` — web güvenliği notları (LFI, path traversal, …).
 - `Windows persistence/` — Windows kalıcılık teknikleri. Kendi alt-index'i var: `Windows Persistence - Index.md` (öğrenme sırasına dizili).
+- `SOC-Investigations/` — SIEM (Splunk) ile olay inceleme metodolojisi: phishing kill chain, Sysmon/Windows Event ID rehberi, kaynaklar arası korelasyon, SPL kalıpları. Kendi alt-index'i var: `SOC Investigations - Index.md`. Makineye özel değil, yöntem odaklı; yeni vaka notları buraya eklenir.
 - `THM-WriteUps/` — TryHackMe / platform write-up'ları.
 - Kök seviye — tek başına duran metodoloji/referans notları (Active Directory checklist, linux privesc, regex).
 
